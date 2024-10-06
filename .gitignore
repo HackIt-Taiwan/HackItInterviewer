@@ -1,0 +1,10 @@
+
+.env
+
+*.pyc
+
+*.txt
+
+*.xml
+
+.idea/
