@@ -3,8 +3,8 @@
 
 *.pyc
 
-*.txt
-
 *.xml
 
 .idea/
+
+webhook_data.txt
