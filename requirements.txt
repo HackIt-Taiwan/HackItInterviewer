@@ -2,3 +2,4 @@ Flask==3.0.3
 mongoengine==0.29.1
 python-dotenv==1.0.1
 pycryptodome==3.21.0
+uuid==1.30

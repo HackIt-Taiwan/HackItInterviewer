@@ -1,8 +1,8 @@
 # Metadata:
 #   Creation Date: 2024/5/14 05:08
-#   Last Update Date: 2024/5/14 05:08
+#   Last Update Date: 2024/10/07 00:20
 #   Author: git@xiaobo.tw
-name: Python workflows
+name: Python workflows (for hackItInterviewer)
 
 on:
   push:
@@ -29,19 +29,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Waiting to write unittest
-    # - name: Run tests
-    #   run: |
-    #     python -m unittest discover
-
     - name: Start Flask application
       env:
         FLASK_APP: run.py
         FLASK_ENV: development
       run: |
         set -e
-        if sudo lsof -i:80; then
-          echo "Port 80 is already in use"
+        if sudo lsof -i:5000; then
+          echo "Port 5000 is already in use"
           exit 1
         fi
         sudo --preserve-env=PATH,FLASK_APP,FLASK_ENV nohup python run.py > flask.log 2>&1 &
@@ -51,8 +46,9 @@ jobs:
           sudo cat flask.log
           exit 1
         fi
-        if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:80)" -ne 200 ]; then
-          echo "Flask application is running, but returned non-200 status code."
+        # Testing the /webhook endpoint instead of homepage
+        if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/webhook)" -ne 405 ]; then
+          echo "Flask application is running, but /webhook returned a non-expected status code."
           sudo cat flask.log
           exit 1
         else
