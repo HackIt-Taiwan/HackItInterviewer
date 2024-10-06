@@ -6,8 +6,9 @@ from enum import Enum
 
 
 class InterviewStatus(Enum):
+    NOT_ACCEPTED = "未受理"
     NOT_CONTACTED = "尚未聯繫"
-    EMAIL_SENT = "已發送郵件（安排面試）"
+    EMAIL_SENT = "已發送郵件（試圖安排面試）"
     INTERVIEW_SCHEDULED = "面試已安排"
     NO_SHOW = "未出席面試"
     TRANSFERRED_TO_ANOTHER_TEAM = "轉接至他組"
@@ -36,7 +37,7 @@ class FormResponse(Document):
     is_duplicate = BooleanField(default=False)
 
     # Interview process fields
-    interview_status = EnumField(InterviewStatus, default=InterviewStatus.NOT_CONTACTED)  # 面試狀態
+    interview_status = EnumField(InterviewStatus, default=InterviewStatus.NOT_ACCEPTED)  # 面試狀態
     is_email_contacted = BooleanField(default=False)            # 問題 1: 是否已透過 Email 聯絡對方
     is_interview_scheduled = BooleanField(default=False)        # 問題 2: 是否已與對方約好會議時間
     is_attended_interview = BooleanField(default=False)         # 問題 3: 是否出席原安排的會議
