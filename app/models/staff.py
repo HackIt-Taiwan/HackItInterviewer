@@ -3,10 +3,10 @@ import uuid
 from datetime import datetime
 
 from mongoengine import Document, UUIDField, StringField, IntField, ListField, DateTimeField, EmbeddedDocumentField, \
-    BooleanField
+    BooleanField, EmbeddedDocument
 from app.models.encrypted_string_field import EncryptedStringField
 
-class ProjectHistory(Document):
+class ProjectHistory(EmbeddedDocument):
     """Model representing project history."""
 
     # Basic information
@@ -16,7 +16,7 @@ class ProjectHistory(Document):
     project_end_date = DateTimeField(required=True)
 
 
-class EmergencyContact(Document):
+class EmergencyContact(EmbeddedDocument):
     """Model representing emergency contacts."""
 
     # Basic personal information
@@ -45,27 +45,30 @@ class Staff(Document):
     line_id = EncryptedStringField(required=False)
     ig_id = EncryptedStringField(required=False)
     discord_id = EncryptedStringField(required=False)
+    introduction = EncryptedStringField(required=False)
 
     # Work-related information
-    current_group = EncryptedStringField(required=True)             # 組別
-    current_position = EncryptedStringField(required=True)          # 身份
-    primary_role = EncryptedStringField(required=False)              # 主要職責
-    expertise = ListField(EncryptedStringField(), required=False)   # 專長
-    employment_status = EncryptedStringField(required=False, choices=['busy', 'normal', 'idle'])       # 空閒狀態
-    active_status = EncryptedStringField(required=False, choices=['Active', 'Inactive', 'Suspended'])  # 活躍狀態
+    current_group = StringField(required=True, choices=['HackIt', '策劃部', '設計部', '行政部', '公關組', '活動企劃組',
+                                                        '美術組', '資訊組', '影音組', '行政組', '財務組', '其他'])
+    current_position = EncryptedStringField(required=True)            # 身份
+    primary_role = EncryptedStringField(required=False)               # 主要職責
+    expertise = ListField(EncryptedStringField(), required=False)     # 專長
+    # project_now = ListField(EncryptedStringField(), required=False)   # TODO: 現在參與的專案 EmbeddedDocumentField
+    # task_now = ListField(EncryptedStringField(), required=False)      # TODO: 現在的任務 EmbeddedDocumentField
+    employment_status = StringField(required=False, choices=['busy', 'normal', 'idle'])       # 空閒狀態
+    active_status = StringField(required=False, choices=['Active', 'Inactive', 'Suspended'])  # 活躍狀態
 
     # Permission level (-1, 0, 1, 2, 3, 4, 5, 6)
     permission_level = IntField(default=0, choices=[-1, 0, 1, 2, 3, 4, 5, 6])
 
     # Additional details
-    introduction = EncryptedStringField(required=False)
     avatar_base64 = StringField(required=False)
     join_date = DateTimeField(default=datetime.utcnow)
     leave_date = DateTimeField(required=False)
     project_history = EmbeddedDocumentField('ProjectHistory', required=False)
 
     # For identifying staff members or for system integration
-    discord_user_id = EncryptedStringField(required=False)
+    discord_user_id = StringField(required=False)
     role_history = ListField(EncryptedStringField(), required=False)
     attendance_records = ListField(EncryptedStringField(), required=False)
     last_login = EncryptedStringField(required=False)
