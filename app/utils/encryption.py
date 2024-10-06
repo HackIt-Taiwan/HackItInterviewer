@@ -1,6 +1,7 @@
 # app/utils/encryption.py
 import os
 import base64
+import hashlib
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
@@ -38,3 +39,7 @@ def aes_decrypt(encrypted_data):
         return pt.decode('utf-8')
     except (ValueError, KeyError) as e:
         raise ValueError(f"Decryption failed: {e}")
+
+def hash_data(data):
+    """Generate a SHA-256 hash of the given data."""
+    return hashlib.sha256(data.encode('utf-8')).hexdigest()

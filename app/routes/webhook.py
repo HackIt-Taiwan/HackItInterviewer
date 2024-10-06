@@ -1,9 +1,11 @@
 # app/routes/webhook.py
 from flask import Blueprint, jsonify, request
 from app.models.form_response import FormResponse
+from app.utils.encryption import hash_data
 
 webhook_bp = Blueprint('webhook', __name__)
 
+# TODO: should not use hardcoded values
 field_mapping = {
     'S5jaJPUkBIkt': '你的名字',
     'ApY1CyoJF6Rv': '電子郵件',
@@ -49,34 +51,36 @@ def webhook():
             field_id = answer.get('id')
             field_value = answer.get('value')
 
-            if field_id == 'S5jaJPUkBIkt':  # name
-                name = field_value
-            elif field_id == 'ApY1CyoJF6Rv':  # email
-                email = field_value
-            elif field_id == '52lBVg2N0KoU':  # phone number
-                phone_number = field_value
-            elif field_id == 'P7YquMjBAMb6':  # high school stage
-                if isinstance(field_value, dict):
-                    stage_id = field_value.get('value', [None])[0]
-                    high_school_stage = high_school_stage_mapping.get(stage_id, stage_id)
-            elif field_id == '1yLzipGL8CXc':  # city
-                city = field_value
-            elif field_id == 'umigMKtao9y7':  # interested fields
-                interested_field_ids = field_value.get('value', []) if isinstance(field_value, dict) else []
-                interested_fields = [interested_fields_mapping.get(field_id, field_id) for field_id in
-                                     interested_field_ids]
-            elif field_id == '3DqecY2ogvR5':  # preferred order
-                preferred_order = field_value
-            elif field_id == 'fV33uN18Aq5b':  # reason for choice
-                reason_for_choice = field_value
-            elif field_id == 'bdXbCUl1iiqq':  # related experience
-                related_experience = field_value
-            elif field_id == 'Gkg271OtI9Bw': # signature URL
-                signature_url = field_value
+            match field_id:
+                case 'S5jaJPUkBIkt':  # name
+                    name = field_value
+                case 'ApY1CyoJF6Rv':  # email
+                    email = field_value
+                case '52lBVg2N0KoU':  # phone number
+                    phone_number = field_value
+                case 'P7YquMjBAMb6':  # high school stage
+                    if isinstance(field_value, dict):
+                        stage_id = field_value.get('value', [None])[0]
+                        high_school_stage = high_school_stage_mapping.get(stage_id, stage_id)
+                case '1yLzipGL8CXc':  # city
+                    city = field_value
+                case 'umigMKtao9y7':  # interested fields
+                    interested_field_ids = field_value.get('value', []) if isinstance(field_value, dict) else []
+                    interested_fields = [interested_fields_mapping.get(field_id, field_id) for field_id in interested_field_ids]
+                case '3DqecY2ogvR5':  # preferred order
+                    preferred_order = field_value
+                case 'fV33uN18Aq5b':  # reason for choice
+                    reason_for_choice = field_value
+                case 'bdXbCUl1iiqq':  # related experience
+                    related_experience = field_value
+                case 'Gkg271OtI9Bw':  # signature URL
+                    signature_url = field_value
 
+        email_hash = hash_data(email)
+        is_duplicate = FormResponse.objects(email_hash=email_hash).first() is not None
 
         print(f'Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {interested_fields}, '
-              f'{preferred_order}, {reason_for_choice}, {related_experience}, {signature_url}')
+              f'{preferred_order}, {reason_for_choice}, {related_experience}, {signature_url}, {email_hash}, {is_duplicate}')
 
         form_response = FormResponse(
             name=name,
@@ -88,7 +92,9 @@ def webhook():
             preferred_order=preferred_order,
             reason_for_choice=reason_for_choice,
             related_experience=related_experience,
-            signature_url=signature_url
+            signature_url=signature_url,
+            email_hash=email_hash,
+            is_duplicate=is_duplicate
         )
 
         form_response.save()

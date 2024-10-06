@@ -3,3 +3,5 @@ mongoengine==0.29.1
 python-dotenv==1.0.1
 pycryptodome==3.21.0
 uuid==1.30
+discord==2.3.2
+discord.py==2.4.0
