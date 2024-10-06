@@ -2,8 +2,11 @@
 from flask import Blueprint, jsonify, request
 from app.models.form_response import FormResponse
 from app.utils.encryption import hash_data
+from app.discord.application_process.helpers import send_initial_embed, get_bot
+import asyncio
 
 webhook_bp = Blueprint('webhook', __name__)
+bot = get_bot()
 
 # TODO: should not use hardcoded values
 field_mapping = {
@@ -34,11 +37,19 @@ interested_fields_mapping = {
     'LMAYGT8Xo4zc': '影音組'
 }
 
+anti = []
+
 
 @webhook_bp.route('/webhook', methods=['POST'])
 def webhook():
     with open('webhook_data.txt', 'w', encoding='utf-8') as f:
         f.write(str(request.json))
+
+    # anti multiple submission
+    email = request.json.get('answers', [{}])[1].get('value')
+    if email in anti:
+        return jsonify({'status': 'error', 'message': 'duplicate submission'}), 200
+    anti.append(email)
 
     try:
         form_data = request.json.get('answers', [])
@@ -98,6 +109,9 @@ def webhook():
         )
 
         form_response.save()
+        future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
+        future.result()  # This will block until the coroutine finishes and raise exceptions if any
+
 
         return jsonify({'status': 'ok'})
     except Exception as e:
