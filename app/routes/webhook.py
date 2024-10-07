@@ -45,11 +45,7 @@ def webhook():
     with open('webhook_data.txt', 'w', encoding='utf-8') as f:
         f.write(str(request.json))
 
-    # anti multiple submission
-    email = request.json.get('answers', [{}])[1].get('value')
-    if email in anti:
-        return jsonify({'status': 'error', 'message': 'duplicate submission'}), 200
-    anti.append(email)
+    print(request.json)
 
     try:
         form_data = request.json.get('answers', [])
@@ -90,6 +86,7 @@ def webhook():
         email_hash = hash_data(email)
         is_duplicate = FormResponse.objects(email_hash=email_hash).first() is not None
 
+        print("---------------------------------")
         print(f'Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {interested_fields}, '
               f'{preferred_order}, {reason_for_choice}, {related_experience}, {signature_url}, {email_hash}, {is_duplicate}')
 

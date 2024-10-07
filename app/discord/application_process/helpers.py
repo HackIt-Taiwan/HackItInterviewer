@@ -1,6 +1,7 @@
 # app/discord/application_process/helpers.py
 import io
 import os
+import json
 from datetime import datetime
 
 import discord
@@ -43,6 +44,18 @@ def get_embed_color(interview_status):
         InterviewStatus.TRANSFERRED_TO_ANOTHER_TEAM: 0xF1C40F,  # Yellow
     }
     return status_colors.get(interview_status, 0x95A5A6)  # Default gray
+
+
+def is_authorized(user, form_response):
+    """Check if the user is authorized to perform actions on this form."""
+    discord_user_id = str(user.id)
+    staff = Staff.objects(discord_user_id=discord_user_id).first()
+    if not staff:
+        return False
+
+    if str(staff.uuid) == form_response.manager_id or staff.permission_level >= 3:
+        return True
+    return False
 
 
 async def send_initial_embed(form_response: FormResponse):
@@ -158,9 +171,86 @@ async def send_log_message(form_response: FormResponse, title: str):
     if form_response.history:
         full_content += "\n歷史紀錄:\n" + "\n".join(form_response.history)
 
+    # Using io.StringIO for file attachment
+    file_stream = io.StringIO(full_content)
     file = discord.File(
-        fp=bytes(full_content, encoding="utf-8"),
+        fp=file_stream,
         filename=f"application_{form_response.uuid}_details.txt",
     )
 
     await channel.send(embed=embed, file=file)
+
+
+def get_view_for_stage(form_response: FormResponse):
+    """Return the appropriate view based on the current stage."""
+    from .views import (
+        ContactOrFailView,
+        ArrangeOrCancelView,
+        AttendOrNoShowView,
+        ManagerFillFormView,
+    )
+
+    status = form_response.interview_status
+
+    if status == InterviewStatus.NOT_CONTACTED:
+        return ContactOrFailView(form_response)
+    elif status == InterviewStatus.EMAIL_SENT:
+        return ArrangeOrCancelView(form_response)
+    elif status == InterviewStatus.INTERVIEW_SCHEDULED:
+        return AttendOrNoShowView(form_response)
+    elif status == InterviewStatus.INTERVIEW_PASSED_WAITING_MANAGER_FORM:
+        return ManagerFillFormView(form_response)
+    else:
+        return None  # No buttons needed
+
+
+async def send_stage_embed(form_response: FormResponse, user):
+    """Send the embed for the current stage."""
+    bot = get_bot()
+    channel = bot.get_channel(APPLY_FORM_CHANNEL_ID)
+    if channel is None:
+        print(f"Channel with ID {APPLY_FORM_CHANNEL_ID} not found.")
+        return
+
+    # Create the embed
+    stage_titles = {
+        InterviewStatus.NOT_CONTACTED: "Stage 2: 等待聯繫",
+        InterviewStatus.EMAIL_SENT: "Stage 3: 試圖安排面試",
+        InterviewStatus.INTERVIEW_SCHEDULED: "Stage 4: 面試已安排",
+        InterviewStatus.INTERVIEW_PASSED_WAITING_MANAGER_FORM: "Stage 6: 負責人填寫資料",
+        InterviewStatus.INTERVIEW_PASSED_WAITING_FOR_FORM: "Stage 7: 等待申請者填寫資料",
+    }
+
+    embed = discord.Embed(
+        title=stage_titles.get(form_response.interview_status, "申請進度更新"),
+        description="申請進度已更新。",
+        color=get_embed_color(form_response.interview_status),
+        timestamp=datetime.utcnow(),
+    )
+
+    # Add fields to the embed
+    fields = [
+        ("申請識別碼", str(form_response.uuid)),
+        ("申請狀態", form_response.interview_status.value),
+        ("姓名", form_response.name),
+        ("電子郵件", form_response.email),
+        ("電話號碼", form_response.phone_number),
+        ("高中階段", form_response.high_school_stage),
+        ("城市", form_response.city),
+        ("申請組別", ", ".join(form_response.interested_fields)),
+        ("順序偏好", form_response.preferred_order),
+        ("選擇原因", form_response.reason_for_choice),
+    ]
+
+    if form_response.related_experience:
+        fields.append(("相關經驗", form_response.related_experience))
+
+    for name, value in fields:
+        if value:
+            value = truncate(str(value))
+            embed.add_field(name=name, value=value, inline=False)
+
+    # Create view with buttons based on the current stage
+    view = get_view_for_stage(form_response)
+
+    await channel.send(embed=embed, view=view)

@@ -1,13 +1,19 @@
 # app/discord/application_process/modals.py
 import discord
-from discord.ui import Modal, TextInput
+from discord.ui import Modal, TextInput, View, Select
+import json
+from datetime import datetime
 
 from app.models.form_response import FormResponse, InterviewStatus
 from app.models.staff import Staff
 from app.utils.redis_client import redis_client
 
-from .helpers import get_bot, send_log_message, get_embed_color, truncate
-from datetime import datetime
+from .helpers import (
+    is_authorized,
+    get_embed_color,
+    send_log_message,
+    send_stage_embed,
+)
 
 
 class FailureReasonModal(Modal):
@@ -54,8 +60,9 @@ class FailureReasonModal(Modal):
         embed.color = get_embed_color(self.form_response.interview_status)
         embed.add_field(name=f"{self.action}原因", value=reason, inline=False)
         embed.add_field(name="歷史紀錄", value="\n".join(self.form_response.history), inline=False)
-        await interaction.message.edit(embed=embed, view=None)
-        await interaction.response.send_message(f"已更新{self.action}原因。", ephemeral=True)
+        await interaction.message.delete()
+        await interaction.response.send_message(f"已更新{self.action}原因（存放於 <#1292599320020783104> )。", ephemeral=True)
+
 
         # Send log message
         await send_log_message(self.form_response, f"申請已{self.action}")
@@ -113,8 +120,6 @@ class TransferToTeamModal(Modal):
         await interaction.response.send_message("已轉接至他組，流程重新開始。", ephemeral=True)
         await interaction.message.delete()
         # Start over
-        from .views import send_stage_embed
-
         await send_stage_embed(self.form_response, interaction.user)
 
 
@@ -160,51 +165,64 @@ class ManagerFillInfoModal1(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         """Handle modal submission."""
-        # Store data in redis or in-memory
+        # Store data in redis
         redis_client.set(
             f"manager_fill:{self.form_response.uuid}",
-            {
+            json.dumps({
                 "name": self.name_input.value,
                 "email": self.email_input.value,
                 "phone_number": self.phone_input.value,
                 "high_school_stage": self.high_school_stage_input.value,
                 "city": self.city_input.value,
-            },
+            }),
+            ex=600  # Set an expiration time (optional)
         )
 
-        # Proceed to next modal
-        modal = ManagerFillInfoModal2(self.form_response)
-        await interaction.response.send_modal(modal)
+        embed = discord.Embed(
+            title="請選擇組員組別",
+            description="請選擇要賦予的組別。",
+            color=0x3498DB,
+        )
+
+        view = ManagerFillInfoModal2(self.form_response)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        await interaction.message.delete()
 
 
-class ManagerFillInfoModal2(Modal):
-    """Second part of the manager's info modal."""
 
-    def __init__(self, form_response: FormResponse):
-        super().__init__(title="負責人填寫資料（2/2）")
+
+class ManagerFillInfoModal2(View):
+    """View to select job information."""
+
+    def __init__(self, form_response):
+        super().__init__(timeout=600)
         self.form_response = form_response
 
-        self.current_group_input = TextInput(
-            label="組別",
-            placeholder="請輸入組別",
-            required=True,
-        )
-        self.current_position_input = TextInput(
-            label="身份",
-            placeholder="請輸入身份",
-            required=True,
-        )
-
-        self.add_item(self.current_group_input)
-        self.add_item(self.current_position_input)
-
-    async def on_submit(self, interaction: discord.Interaction):
-        """Handle modal submission."""
-        # Retrieve data from redis or in-memory
+    @discord.ui.select(
+        placeholder="選擇賦予的組別",
+        options=[
+            discord.SelectOption(label="HackIt", value="HackIt"),
+            discord.SelectOption(label="策劃部", value="策劃部"),
+            discord.SelectOption(label="設計部", value="設計部"),
+            discord.SelectOption(label="行政部", value="行政部"),
+            discord.SelectOption(label="公關組", value="公關組"),
+            discord.SelectOption(label="活動企劃組", value="活動企劃組"),
+            discord.SelectOption(label="美術組", value="美術組"),
+            discord.SelectOption(label="資訊組", value="資訊組"),
+            discord.SelectOption(label="影音組", value="影音組"),
+            discord.SelectOption(label="行政組", value="行政組"),
+            discord.SelectOption(label="財務組", value="財務組"),
+            discord.SelectOption(label="其他", value="其他"),
+        ],
+    )
+    async def select_callback(self, interaction: discord.Interaction, select: Select):
+        # Retrieve data from redis
         stored_data = redis_client.get(f"manager_fill:{self.form_response.uuid}")
         if not stored_data:
             await interaction.response.send_message("發生錯誤，請重新開始。", ephemeral=True)
             return
+
+        stored_data = json.loads(stored_data)
 
         # Create Staff model
         staff = Staff(
@@ -213,9 +231,8 @@ class ManagerFillInfoModal2(Modal):
             phone_number=stored_data["phone_number"],
             high_school_stage=stored_data["high_school_stage"],
             city=stored_data["city"],
-            current_group=self.current_group_input.value,
-            current_position=self.current_position_input.value,
-            discord_user_id=str(self.form_response.uuid),  # Placeholder, update accordingly
+            current_group=select.values[0],
+            current_position="組員",
             is_signup=False,
         )
         staff.save()
@@ -228,19 +245,5 @@ class ManagerFillInfoModal2(Modal):
         self.form_response.save()
 
         await interaction.response.send_message("資料已填寫，等待申請者填寫剩餘資訊。", ephemeral=True)
-        await interaction.message.delete()
-        from .views import send_stage_embed
 
         await send_stage_embed(self.form_response, interaction.user)
-
-
-def is_authorized(user, form_response):
-    """Check if the user is authorized to perform actions on this form."""
-    discord_user_id = str(user.id)
-    staff = Staff.objects(discord_user_id=discord_user_id).first()
-    if not staff:
-        return False
-
-    if str(staff.uuid) == form_response.manager_id or staff.permission_level >= 3:
-        return True
-    return False

@@ -1,16 +1,14 @@
 # app/discord/application_process/views.py
 import discord
-from discord.ui import Button, View, Modal, TextInput
+from discord.ui import Button, View
 
 from app.models.form_response import FormResponse, InterviewStatus
-from app.models.staff import Staff
 from datetime import datetime
 
 from .helpers import (
     truncate,
     get_bot,
     get_embed_color,
-    send_log_message,
     APPLY_FORM_CHANNEL_ID,
 )
 from .modals import (
@@ -19,6 +17,7 @@ from .modals import (
     ManagerFillInfoModal1,
     is_authorized,
 )
+from ...models.staff import Staff
 
 
 class AcceptOrCancelView(View):
@@ -57,9 +56,13 @@ class AcceptOrCancelView(View):
     @discord.ui.button(label="取消", style=discord.ButtonStyle.danger)
     async def cancel_button(self, interaction: discord.Interaction, button: Button):
         """Handle Cancel button click."""
-        if not is_authorized(interaction.user, self.form_response):
+        # Identity verification
+        discord_user_id = str(interaction.user.id)
+        staff = Staff.objects(discord_user_id=discord_user_id).first()
+        if not staff or staff.permission_level < 2:
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
+
         # Open modal to input cancellation reason
         modal = FailureReasonModal(self.form_response, action="取消")
         await interaction.response.send_modal(modal)
