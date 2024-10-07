@@ -18,6 +18,24 @@ load_dotenv()
 import_existing_members_setup(bot)
 application_process_setup(bot)
 
-# Make the bot instance accessible globally
+@bot.event
+async def on_ready():
+    print(f"Bots are ready!")
+    from app.discord.application_process.views import (
+        AcceptOrCancelView,
+        ContactOrFailView,
+        ArrangeOrCancelView,
+        AttendOrNoShowView,
+        InterviewResultView,
+        ManagerFillFormView,
+    )
+
+    bot.add_view(AcceptOrCancelView())
+    bot.add_view(ContactOrFailView())
+    bot.add_view(ArrangeOrCancelView())
+    bot.add_view(AttendOrNoShowView())
+    bot.add_view(InterviewResultView())
+    bot.add_view(ManagerFillFormView())
+
 def get_bot():
     return bot

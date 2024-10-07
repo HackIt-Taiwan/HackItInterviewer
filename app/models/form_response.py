@@ -45,7 +45,8 @@ class FormResponse(Document):
     is_form_completed_by_manager = BooleanField(default=False)  # 問題 5: 由負責人填寫表單
     is_registered = BooleanField(default=False)                 # 問題 6: 是否已註冊
 
-    manager_id = EncryptedStringField(required=False) # 負責人 ID
+    manager_id = StringField(required=False) # 負責人 ID
+    last_message_id = StringField(required=False)
     history = ListField(EncryptedStringField(), required=False)  # 歷史紀錄
 
 

@@ -175,12 +175,12 @@ class ManagerFillInfoModal1(Modal):
                 "high_school_stage": self.high_school_stage_input.value,
                 "city": self.city_input.value,
             }),
-            ex=600  # Set an expiration time (optional)
+            ex=86400  # Set an expiration time (optional)
         )
 
         embed = discord.Embed(
             title="請選擇組員組別",
-            description="請選擇要賦予的組別。",
+            description="請選擇要賦予的組別。\n請立即完成此動作，否則資料將被清除。",
             color=0x3498DB,
         )
 
@@ -219,7 +219,7 @@ class ManagerFillInfoModal2(View):
         # Retrieve data from redis
         stored_data = redis_client.get(f"manager_fill:{self.form_response.uuid}")
         if not stored_data:
-            await interaction.response.send_message("發生錯誤，請重新開始。", ephemeral=True)
+            await interaction.response.send_message("發生錯誤。（超時或已填寫完成）", ephemeral=True)
             return
 
         stored_data = json.loads(stored_data)
@@ -244,6 +244,6 @@ class ManagerFillInfoModal2(View):
         self.form_response.history.append(history_entry)
         self.form_response.save()
 
-        await interaction.response.send_message("資料已填寫，等待申請者填寫剩餘資訊。", ephemeral=True)
-
-        await send_stage_embed(self.form_response, interaction.user)
+        redis_client.delete(f"manager_fill:{self.form_response.uuid}")
+        await interaction.response.send_message("資料填寫成功！", ephemeral=True)
+        await send_log_message(self.form_response, "面試通過，已填寫資料。")

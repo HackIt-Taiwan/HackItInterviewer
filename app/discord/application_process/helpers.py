@@ -10,8 +10,8 @@ from app.models.form_response import FormResponse, InterviewStatus
 from app.models.staff import Staff
 from app.utils.redis_client import redis_client
 
-APPLY_FORM_CHANNEL_ID = int(os.getenv("APPLY_FORM_CHANNEL_ID"))
-APPLY_LOG_CHANNEL_ID = int(os.getenv("APPLY_LOG_CHANNEL_ID"))
+APPLY_FORM_CHANNEL_ID = int(os.getenv("APPLY_FORM_CHANNEL_ID", "0"))
+APPLY_LOG_CHANNEL_ID = int(os.getenv("APPLY_LOG_CHANNEL_ID", "0"))
 
 
 def truncate(value, max_length=1024):
