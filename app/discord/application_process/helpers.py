@@ -163,6 +163,32 @@ async def send_log_message(form_response: FormResponse, title: str):
         history_str = "\n".join(form_response.history)
         embed.add_field(name="歷史紀錄", value=history_str, inline=False)
 
+    # Handle failure or cancellation reasons
+    files = []
+    if form_response.failure_reason:
+        reason = truncate(form_response.failure_reason)
+        embed.add_field(name="面試失敗原因", value=reason, inline=False)
+        if len(form_response.failure_reason) > 1024 - 80:
+            # Attach the full reason as a file
+            file_stream = io.StringIO(form_response.failure_reason)
+            file = discord.File(
+                fp=file_stream,
+                filename=f"{form_response.uuid}_failure_reason.txt",
+            )
+            files.append(file)
+
+    if form_response.cancellation_reason:
+        reason = truncate(form_response.cancellation_reason)
+        embed.add_field(name="取消原因", value=reason, inline=False)
+        if len(form_response.cancellation_reason) > 1024 - 80:
+            # Attach the full reason as a file
+            file_stream = io.StringIO(form_response.cancellation_reason)
+            file = discord.File(
+                fp=file_stream,
+                filename=f"{form_response.uuid}_cancellation_reason.txt",
+            )
+            files.append(file)
+
     # Create a text attachment with full content
     full_content = ""
     for name, value in fields:
@@ -170,20 +196,25 @@ async def send_log_message(form_response: FormResponse, title: str):
             full_content += f"{name}: {value}\n"
     if form_response.history:
         full_content += "\n歷史紀錄:\n" + "\n".join(form_response.history)
+    if form_response.failure_reason:
+        full_content += f"\n面試失敗原因:\n{form_response.failure_reason}\n"
+    if form_response.cancellation_reason:
+        full_content += f"\n取消原因:\n{form_response.cancellation_reason}\n"
 
-    # Using io.StringIO for file attachment
     file_stream = io.StringIO(full_content)
-    file = discord.File(
+    main_file = discord.File(
         fp=file_stream,
         filename=f"application_{form_response.uuid}_details.txt",
     )
+    files.append(main_file)
 
-    await channel.send(embed=embed, file=file)
+    await channel.send(embed=embed, files=files)
 
 
 def get_view_for_stage(form_response: FormResponse):
     """Return the appropriate view based on the current stage."""
     from .views import (
+        AcceptOrCancelView,
         ContactOrFailView,
         ArrangeOrCancelView,
         AttendOrNoShowView,
@@ -192,7 +223,9 @@ def get_view_for_stage(form_response: FormResponse):
 
     status = form_response.interview_status
 
-    if status == InterviewStatus.NOT_CONTACTED:
+    if status == InterviewStatus.NOT_ACCEPTED:
+        return AcceptOrCancelView(form_response)
+    elif status == InterviewStatus.NOT_CONTACTED:
         return ContactOrFailView(form_response)
     elif status == InterviewStatus.EMAIL_SENT:
         return ArrangeOrCancelView(form_response)
@@ -214,6 +247,7 @@ async def send_stage_embed(form_response: FormResponse, user):
 
     # Create the embed
     stage_titles = {
+        InterviewStatus.NOT_ACCEPTED: "Stage 1: 等待受理",
         InterviewStatus.NOT_CONTACTED: "Stage 2: 等待聯繫",
         InterviewStatus.EMAIL_SENT: "Stage 3: 試圖安排面試",
         InterviewStatus.INTERVIEW_SCHEDULED: "Stage 4: 面試已安排",
