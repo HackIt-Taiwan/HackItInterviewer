@@ -129,17 +129,21 @@ async def send_log_message(form_response: FormResponse, title: str, current_grou
         return
 
     staff = Staff.objects(uuid=form_response.manager_id).first()
+    
     if not staff:
-        print(f"Staff with ID {form_response.manager_id} not found.")
-        await channel.send("錯誤，找不到負責人。")
-    discord_user = await bot.fetch_user(staff.discord_user_id)
+        embed = discord.Embed(
+            title=title,
+            description=f"申請流程已更新",
+            color=get_embed_color(form_response.interview_status),
+        )
+    else:
+        discord_user = await bot.fetch_user(staff.discord_user_id)
+        embed = discord.Embed(
+            title=title,
+            description=f"申請流程已更新 cc:{discord_user.mention}",
+            color=get_embed_color(form_response.interview_status),
+        )
 
-    # Create the embed
-    embed = discord.Embed(
-        title=title,
-        description=f"申請流程已更新 cc:{discord_user.mention}",
-        color=get_embed_color(form_response.interview_status),
-    )
     embed.set_footer(text=time.strftime('%Y/%m/%d %H:%M') + " ● HackIt")
 
 

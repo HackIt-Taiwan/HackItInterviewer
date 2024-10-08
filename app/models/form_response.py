@@ -12,7 +12,7 @@ class InterviewStatus(Enum):
     INTERVIEW_SCHEDULED = "面試已安排"
     NO_SHOW = "未出席面試"
     TRANSFERRED_TO_ANOTHER_TEAM = "轉接至他組"
-    INTERVIEW_PASSED_WAITING_MANAGER_FORM = "面試通過（等待負責人填寫表單）"
+    INTERVIEW_PASSED_WAITING_MANAGER_FORM = "面試通過（資料填寫中）"
     INTERVIEW_PASSED_WAITING_FOR_FORM = "面試通過"
     INTERVIEW_PASSED = "面試通過"
     INTERVIEW_FAILED = "面試失敗"
@@ -27,7 +27,7 @@ class FormResponse(Document):
     phone_number = EncryptedStringField(required=True)
     high_school_stage = EncryptedStringField(required=True)
     city = EncryptedStringField(required=True)
-    interested_fields = ListField(EncryptedStringField(), required=True)
+    interested_fields = ListField(StringField(), required=True)
     preferred_order = EncryptedStringField(required=False)
     reason_for_choice = EncryptedStringField(required=True)
     related_experience = EncryptedStringField(required=True)

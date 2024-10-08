@@ -1,9 +1,10 @@
 # app/discord/application_process/views.py
 import io
+import re
 import time
 
 import discord
-from discord.ui import Button, View
+from discord.ui import Button, View, UserSelect, Select
 from datetime import datetime
 
 from app.models.form_response import FormResponse, InterviewStatus
@@ -562,3 +563,172 @@ class FindMyView(View):
         # Send the embeds
         for embed in embeds:
             await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="查找案件 (過濾版)", style=discord.ButtonStyle.secondary, custom_id="find_cases_filtered_button")
+    async def find_cases_filtered_button(self, interaction: discord.Interaction, button: Button):
+        """Handle the button interaction to find cases with filters."""
+        if button.custom_id != "find_cases_filtered_button":
+            return
+
+        # Create the FilterCasesView and send it to the user
+        view = FilterCasesView()
+        embed = discord.Embed(
+            title="查找案件（過濾版）",
+            description="請選擇過濾條件（至少選擇一個）。",
+            color=0x3498DB,
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+class FilterCasesView(View):
+    """View to filter and find cases based on selected criteria."""
+
+    def __init__(self):
+        super().__init__(timeout=600)
+        self.status = None
+        self.first_interested_field = None
+        self.manager = None
+
+        # Status Select
+        self.status_select = Select(
+            placeholder="選擇案件狀態（可選）",
+            options=[
+                discord.SelectOption(label="未受理", value="NOT_ACCEPTED"),
+                discord.SelectOption(label="受理中", value="IN_PROGRESS"),
+                discord.SelectOption(label="面試完成", value="COMPLETED"),
+            ],
+            min_values=0, max_values=1,
+            custom_id="status_select"
+        )
+        self.status_select.callback = self.status_select_callback
+        self.add_item(self.status_select)
+
+        # Interested Field Select
+        self.interested_field_select = Select(
+            placeholder="選擇組別（可選）",
+            options=[
+                discord.SelectOption(label="公關組", value="公關組"),
+                discord.SelectOption(label="活動企劃組", value="活動企劃組"),
+                discord.SelectOption(label="美術組", value="美術組"),
+                discord.SelectOption(label="資訊組", value="資訊組"),
+                discord.SelectOption(label="影音組", value="影音組"),
+                discord.SelectOption(label="行政組", value="行政組"),
+                discord.SelectOption(label="財務組", value="財務組"),
+            ],
+            min_values=0, max_values=1,
+            custom_id="interested_field_select"
+        )
+        self.interested_field_select.callback = self.interested_field_select_callback
+        self.add_item(self.interested_field_select)
+
+        # Manager UserSelect
+        self.manager_select = UserSelect(
+            placeholder="選擇負責人（可選）",
+            min_values=0,
+            max_values=1,
+            custom_id="manager_select"
+        )
+        self.manager_select.callback = self.manager_select_callback
+        self.add_item(self.manager_select)
+
+        # Add Search and Cancel buttons
+        self.search_button = Button(
+            label="搜尋",
+            style=discord.ButtonStyle.success,
+            custom_id="filter_cases_search_button"
+        )
+        self.search_button.callback = self.search_button_callback
+        self.add_item(self.search_button)
+
+    async def status_select_callback(self, interaction: discord.Interaction):
+        self.status = self.status_select.values[0] if self.status_select.values else None
+        await interaction.response.defer()
+
+    async def interested_field_select_callback(self, interaction: discord.Interaction):
+        self.first_interested_field = self.interested_field_select.values[0] if self.interested_field_select.values else None
+        await interaction.response.defer()
+
+    async def manager_select_callback(self, interaction: discord.Interaction):
+        if self.manager_select.values:
+            self.manager = self.manager_select.values[0]
+        else:
+            self.manager = None
+        await interaction.response.defer()
+
+    async def search_button_callback(self, interaction: discord.Interaction):
+        # Defer the interaction, since we're going to send follow-up messages
+        await interaction.response.defer(ephemeral=True)
+
+        # Handle the search logic
+        if not self.status and not self.first_interested_field and not self.manager:
+            await interaction.followup.send("請至少選擇一個過濾條件。", ephemeral=True)
+            return
+
+        # Build the query
+        query = {}
+        if self.status:
+            if self.status == "NOT_ACCEPTED":
+                query['interview_status'] = InterviewStatus.NOT_ACCEPTED
+            elif self.status == "IN_PROGRESS":
+                # Exclude 'NOT_ACCEPTED' and 'COMPLETED' statuses
+                completed_statuses = [
+                    InterviewStatus.INTERVIEW_PASSED_WAITING_FOR_FORM,
+                    InterviewStatus.INTERVIEW_PASSED,
+                    InterviewStatus.CANCELLED,
+                    InterviewStatus.INTERVIEW_FAILED,
+                ]
+                query['interview_status__nin'] = [InterviewStatus.NOT_ACCEPTED] + completed_statuses
+            elif self.status == "COMPLETED":
+                query['interview_status__in'] = [
+                    InterviewStatus.INTERVIEW_PASSED_WAITING_FOR_FORM,
+                    InterviewStatus.INTERVIEW_PASSED,
+                    InterviewStatus.CANCELLED,
+                    InterviewStatus.INTERVIEW_FAILED,
+                ]
+
+        if self.first_interested_field:
+            query['interested_fields__startswith'] = self.first_interested_field
+
+        if self.manager:
+            manager_staff = Staff.objects(discord_user_id=str(self.manager.id)).first()
+            if manager_staff:
+                query['manager_id'] = str(manager_staff.uuid)
+            else:
+                await interaction.followup.send("未找到該負責人的資料。", ephemeral=True)
+                return
+
+        # Query the database
+        apps = FormResponse.objects(**query)
+
+        if not apps:
+            no_cases_embed = discord.Embed(description="目前沒有符合條件的案件。", color=0xff6666)
+            await interaction.followup.send(embed=no_cases_embed, ephemeral=True)
+            return
+
+        # Prepare the results
+        embeds = []
+        description = ""
+        max_length = 1024 - 80  # Adjust as needed
+
+        for app in apps:
+            # Construct the message link if available
+            if app.last_message_id:
+                message_link = f"https://discord.com/channels/{interaction.guild.id}/{APPLY_FORM_CHANNEL_ID}/{app.last_message_id}"
+                message_jump = f"[跳轉到訊息]({message_link})"
+            else:
+                message_jump = "無法取得訊息連結"
+
+            line = f"{app.name} -- {app.interview_status.value} -- {app.email} \n {', '.join(app.interested_fields)} / {message_jump}\n\n"
+            if len(description) + len(line) > max_length:
+                embed = discord.Embed(description=description, color=0x3498DB)
+                embeds.append(embed)
+                description = ""
+            description += line
+
+        if description:
+            embed = discord.Embed(description=description, color=0x3498DB)
+            embeds.append(embed)
+
+        # Send the embeds
+        for embed in embeds:
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
