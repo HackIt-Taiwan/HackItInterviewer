@@ -1,6 +1,6 @@
 # app/discord/application_process/modals.py
 import discord
-from discord.ui import Modal, TextInput, View, Select
+from discord.ui import Modal, TextInput, View, Select, Button, UserSelect
 import json
 from datetime import datetime
 
@@ -62,58 +62,79 @@ class FailureReasonModal(Modal):
         await send_log_message(self.form_response, f"申請已{self.action}", reason=reason)
 
 
-class TransferToTeamModal(Modal):
-    """Modal to input the team to transfer to."""
+class TransferToTeamView(View):
+    """View to select the new team and new manager."""
 
-    def __init__(self, form_response: FormResponse):
-        super().__init__(title="轉接至他組")
+    def __init__(self, form_response):
+        super().__init__(timeout=None)
         self.form_response = form_response
-        self.team_input = TextInput(
-            label="新的組別",
-            required=True,
-            placeholder="請輸入要轉接的組別",
-        )
-        self.manager_id_input = TextInput(
-            label="新負責人Discord ID（可選）",
-            required=False,
-            placeholder="請輸入新負責人的Discord ID（可選）",
-        )
-        self.add_item(self.team_input)
-        self.add_item(self.manager_id_input)
+        self.new_team = None
+        self.new_manager = None
 
-    async def on_submit(self, interaction: discord.Interaction):
-        """Handle modal submission."""
-        # Verify identity
+    @discord.ui.select(
+        placeholder="選擇新的組別",
+        options=[
+            discord.SelectOption(label="HackIt", value="HackIt"),
+            discord.SelectOption(label="策劃部", value="策劃部"),
+            discord.SelectOption(label="設計部", value="設計部"),
+            discord.SelectOption(label="行政部", value="行政部"),
+            discord.SelectOption(label="公關組", value="公關組"),
+            discord.SelectOption(label="活動企劃組", value="活動企劃組"),
+            discord.SelectOption(label="美術組", value="美術組"),
+            discord.SelectOption(label="資訊組", value="資訊組"),
+            discord.SelectOption(label="影音組", value="影音組"),
+            discord.SelectOption(label="行政組", value="行政組"),
+            discord.SelectOption(label="財務組", value="財務組"),
+            discord.SelectOption(label="其他", value="其他"),
+        ],
+    )
+    async def team_select(self, interaction: discord.Interaction, select: Select):
+        self.new_team = select.values[0]
+        await interaction.response.defer()
+
+    @discord.ui.select(
+        cls=UserSelect,
+        placeholder="選擇新的負責人",
+        min_values=1,
+        max_values=1,
+        custom_id="manager_select",
+    )
+    async def manager_select(self, interaction: discord.Interaction, select: discord.ui.UserSelect):
+        self.new_manager = select.values[0]
+        await interaction.response.defer()
+
+    @discord.ui.button(
+        label="確認轉接",
+        style=discord.ButtonStyle.success,
+        custom_id="transfer_to_team_view_confirm",
+    )
+    async def confirm_button(self, interaction: discord.Interaction, button: Button):
+        """Handle Confirm button click."""
         if not is_authorized(interaction.user, self.form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
-        # Update the form_response with the new team
-        new_team = self.team_input.value
-        new_manager_discord_id = self.manager_id_input.value.strip()
+        if not self.new_team or not self.new_manager:
+            await interaction.response.send_message("請選擇新的組別和新的負責人。", ephemeral=True)
+            return
 
         now_str = datetime.utcnow().strftime("%Y/%m/%d %H:%M")
-        history_entry = f"{now_str} --- 轉接至 {new_team} by {interaction.user.name}"
+        history_entry = f"{now_str} --- 轉接至 {self.new_team} by {interaction.user.name}"
 
-        self.form_response.interested_fields = [new_team]
-
-        if new_manager_discord_id:
-            # Update manager_id
-            staff = Staff.objects(discord_user_id=new_manager_discord_id).first()
-            if staff:
-                self.form_response.manager_id = str(staff.uuid)
-                history_entry += f", 新負責人: {staff.name}"
-            else:
-                await interaction.response.send_message("未找到該Discord ID的負責人。", ephemeral=True)
-                return
+        # Update manager_id
+        staff = Staff.objects(discord_user_id=str(self.new_manager.id)).first()
+        if staff:
+            self.form_response.manager_id = str(staff.uuid)
+            history_entry += f", 新負責人: {staff.name}"
+        else:
+            await interaction.response.send_message("未找到該Discord ID的負責人。", ephemeral=True)
+            return
 
         self.form_response.history.append(history_entry)
         self.form_response.interview_status = InterviewStatus.NOT_CONTACTED
         self.form_response.save()
 
         await interaction.response.send_message("已轉接至他組，流程重新開始。", ephemeral=True)
-        await interaction.message.delete()
-        # Start over
         await send_stage_embed(self.form_response, interaction.user)
 
 

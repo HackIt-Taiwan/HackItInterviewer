@@ -38,5 +38,11 @@ def setup(bot):
         embed.add_field(
             name="查找負責案件",
             value="查詢您負責的處理中面試表單。",
+            inline=False,
+        )
+        embed.add_field(
+            name="查找未受理案件",
+            value="查詢所有未受理的面試表單。",
+            inline=False,
         )
         await ctx.send(embed=embed, view=view)

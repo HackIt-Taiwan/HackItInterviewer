@@ -1,6 +1,7 @@
 # app/discord/application_process/helpers.py
 import io
 import os
+import time
 from datetime import datetime
 
 import discord
@@ -70,8 +71,8 @@ async def send_initial_embed(form_response: FormResponse):
         title="新申請：等待受理",
         description="有一個新的申請等待受理。",
         color=get_embed_color(form_response.interview_status),
-        timestamp=datetime.utcnow(),
     )
+    embed.set_footer(text=time.strftime('%Y/%m/%d %H:%M') + " ● HackIt")
 
     # Add fields to the embed
     fields_info = {
@@ -127,13 +128,19 @@ async def send_log_message(form_response: FormResponse, title: str, current_grou
         print(f"Channel with ID {APPLY_LOG_CHANNEL_ID} not found.")
         return
 
+    staff = Staff.objects(uuid=form_response.manager_id).first()
+    if not staff:
+        print(f"Staff with ID {form_response.manager_id} not found.")
+        await channel.send("錯誤，找不到負責人。")
+    discord_user = await bot.fetch_user(staff.discord_user_id)
+
     # Create the embed
     embed = discord.Embed(
         title=title,
-        description="申請流程已更新。",
+        description=f"申請流程已更新 cc:{discord_user.mention}",
         color=get_embed_color(form_response.interview_status),
-        timestamp=datetime.utcnow(),
     )
+    embed.set_footer(text=time.strftime('%Y/%m/%d %H:%M') + " ● HackIt")
 
 
     # Add fields to the embed
@@ -175,7 +182,7 @@ async def send_log_message(form_response: FormResponse, title: str, current_grou
         embed.add_field(name="歷史紀錄", value=history_str, inline=False)
 
     if reason:
-        embed.add_field(name="原因", value=reason, inline=False)
+        embed.add_field(name="原因", value=truncate(reason), inline=False)
         full_content += f"\n\n決議原因:\n {reason}\n"
 
     # Attach full content as a file
@@ -229,14 +236,21 @@ async def send_stage_embed(form_response: FormResponse, user):
         InterviewStatus.INTERVIEW_PASSED_WAITING_MANAGER_FORM: "Stage 6: 負責人填寫資料",
     }
 
+    staff = Staff.objects(uuid=form_response.manager_id).first()
+    if not staff:
+        print(f"Staff with ID {form_response.manager_id} not found.")
+        await channel.send("錯誤，找不到負責人。")
+    discord_user = await bot.fetch_user(staff.discord_user_id)
+
     # Create the embed
     embed_title = stage_titles.get(form_response.interview_status, "申請進度更新")
     embed = discord.Embed(
         title=embed_title,
-        description="申請進度已更新。",
+        # and @ the user for manager_id
+        description=f"申請進度已更新 cc:{discord_user.mention}",
         color=get_embed_color(form_response.interview_status),
-        timestamp=datetime.utcnow(),
     )
+    embed.set_footer(text=time.strftime('%Y/%m/%d %H:%M') + " ● HackIt")
 
     fields_info = {
         'uuid': '申請識別碼',
@@ -272,8 +286,10 @@ async def send_stage_embed(form_response: FormResponse, user):
 
 
     view = get_view_for_stage(form_response)
-    await channel.send(embed=embed, view=view, file=file)
+    message = await channel.send(embed=embed, view=view, file=file)
 
+    form_response.last_message_id = str(message.id)
+    form_response.save()
 
 def _generate_full_content(fields_info, form_response):
     """Generates the full content for the file to be attached.

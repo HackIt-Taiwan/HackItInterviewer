@@ -1,5 +1,6 @@
 # app/discord/application_process/views.py
 import io
+import time
 
 import discord
 from discord.ui import Button, View
@@ -17,9 +18,8 @@ from .helpers import (
 )
 from .modals import (
     FailureReasonModal,
-    TransferToTeamModal,
     ManagerFillInfoModal1,
-    is_authorized,
+    is_authorized, TransferToTeamView,
 )
 
 
@@ -312,13 +312,14 @@ async def send_interview_result_embed(form_response: FormResponse, user):
         print(f"Channel with ID {APPLY_FORM_CHANNEL_ID} not found.")
         return
 
+
     # Create the embed
     embed = discord.Embed(
         title="Stage 5: 面試結果",
-        description="請選擇面試結果。",
+        description=f"請選擇面試結果 cc:{user.mention}",
         color=get_embed_color(form_response.interview_status),
-        timestamp=datetime.utcnow(),
     )
+    embed.set_footer(text=time.strftime('%Y/%m/%d %H:%M') + " ● HackIt")
 
     fields_info = {
         'uuid': '申請識別碼',
@@ -416,8 +417,14 @@ class InterviewResultView(FormResponseView):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
-        modal = TransferToTeamModal(self.form_response)
-        await interaction.response.send_modal(modal)
+        view = TransferToTeamView(self.form_response)
+        embed = discord.Embed(
+            title="轉接至他組",
+            description="請選擇新的組別和新的負責人。\n請盡速選擇，否則資料將被清空。\n\n按鈕請勿重複使用！！！。",
+            color=0x3498DB,
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        await interaction.message.delete()
 
 
 class ManagerFillFormView(FormResponseView):
@@ -467,9 +474,8 @@ class FindMyView(View):
         if button.custom_id != "find_my_button":
             return
 
-        print(interaction.user.id)
+        await interaction.response.defer()
         staff_member = Staff.objects(discord_user_id=str(interaction.user.id)).first()
-        print(staff_member.uuid)
         if staff_member is None:
             no_staff_embed = discord.Embed(description=f"使用者 {interaction.user.mention} 越權查詢！", color=0xff6666)
             await interaction.response.send_message(embed=no_staff_embed, ephemeral=True)
@@ -514,4 +520,45 @@ class FindMyView(View):
             embeds.append(embed)
 
         for embed in embeds:
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="查找未受理案件", style=discord.ButtonStyle.secondary, custom_id="find_not_accepted_button")
+    async def find_not_accepted_button(self, interaction: discord.Interaction, button: Button):
+        """Handle the button interaction to find all NOT_ACCEPTED cases."""
+        if button.custom_id != "find_not_accepted_button":
+            return
+
+        await interaction.response.defer()
+        not_accepted_apps = FormResponse.objects(interview_status=InterviewStatus.NOT_ACCEPTED)
+
+        if not not_accepted_apps:
+            no_cases_embed = discord.Embed(description="目前沒有未受理的案件。", color=0xff6666)
+            await interaction.response.send_message(embed=no_cases_embed, ephemeral=True)
+            return
+
+        embeds = []
+        description = ""
+        max_length = 1024 - 80  # Adjust as needed
+
+        for app in not_accepted_apps:
+            # Construct the message link if available
+            if app.last_message_id:
+                message_link = f"https://discord.com/channels/{interaction.guild.id}/{APPLY_FORM_CHANNEL_ID}/{app.last_message_id}"
+                message_jump = f"[跳轉到訊息]({message_link})"
+            else:
+                message_jump = "無法取得訊息連結"
+
+            line = f"{app.name} -- {app.email} \n {', '.join(app.interested_fields)} / {message_jump}\n\n"
+            if len(description) + len(line) > max_length:
+                embed = discord.Embed(description=description, color=0x3498DB)
+                embeds.append(embed)
+                description = ""
+            description += line
+
+        if description:
+            embed = discord.Embed(description=description, color=0x3498DB)
+            embeds.append(embed)
+
+        # Send the embeds
+        for embed in embeds:
+            await interaction.followup.send(embed=embed, ephemeral=True)
