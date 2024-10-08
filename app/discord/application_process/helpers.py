@@ -1,14 +1,12 @@
 # app/discord/application_process/helpers.py
 import io
 import os
-import json
 from datetime import datetime
 
 import discord
 
 from app.models.form_response import FormResponse, InterviewStatus
 from app.models.staff import Staff
-from app.utils.redis_client import redis_client
 
 APPLY_FORM_CHANNEL_ID = int(os.getenv("APPLY_FORM_CHANNEL_ID", "0"))
 APPLY_LOG_CHANNEL_ID = int(os.getenv("APPLY_LOG_CHANNEL_ID", "0"))
@@ -76,50 +74,51 @@ async def send_initial_embed(form_response: FormResponse):
     )
 
     # Add fields to the embed
-    fields = [
-        ("申請識別碼", str(form_response.uuid)),
-        ("申請狀態", form_response.interview_status.value),
-        ("姓名", form_response.name),
-        ("電子郵件", form_response.email),
-        ("電話號碼", form_response.phone_number),
-        ("高中階段", form_response.high_school_stage),
-        ("城市", form_response.city),
-        ("申請組別", ", ".join(form_response.interested_fields)),
-        ("順序偏好", form_response.preferred_order),
-        ("選擇原因", form_response.reason_for_choice),
-    ]
+    fields_info = {
+        'uuid': '申請識別碼',
+        'interview_status': '申請狀態',
+        'name': '姓名',
+        'email': '電子郵件',
+        'phone_number': '電話號碼',
+        'interested_fields': '申請組別',
+        'high_school_stage': '高中階段',
+        'city': '城市',
+        'preferred_order': '順序偏好',
+        'reason_for_choice': '選擇原因',
+        'related_experience': '相關經驗',
+    }
 
-    if form_response.related_experience:
-        fields.append(("相關經驗", form_response.related_experience))
+    embed_fields = ['uuid', 'interview_status', 'name', 'email', 'phone_number', 'interested_fields']
+    full_content = _generate_full_content(fields_info, form_response)
 
-    for name, value in fields:
-        if value:
-            value = truncate(str(value))
-            embed.add_field(name=name, value=value, inline=False)
-
-    # Create a text attachment with full content
-    full_content = ""
-    for name, value in fields:
-        if value:
-            full_content += f"{name}: {value}\n"
-
-    # Using io.StringIO for file attachment
+    # Attach full content as a file
     file_stream = io.StringIO(full_content)
+    file = discord.File(fp=file_stream, filename=f"application_{form_response.uuid}.txt")
 
-    file = discord.File(
-        fp=file_stream,
-        filename=f"application_{form_response.uuid}.txt",
-    )
+    # Add fields to the embed
+    for field in embed_fields:
+        value = getattr(form_response, field, None)
+        if field == 'interview_status':
+            # Use Enum's value to get the Chinese translation for interview status
+            value = form_response.interview_status.value
+        if value:
+            if isinstance(value, list):
+                value = ", ".join(value)
+            embed.add_field(name=fields_info[field], value=truncate(str(value)), inline=False)
+
 
     # Create view with buttons
     from .views import AcceptOrCancelView
 
     view = AcceptOrCancelView(form_response)
 
-    await channel.send(embed=embed, file=file, view=view)
+    message = await channel.send(embed=embed, file=file, view=view)
+
+    form_response.last_message_id = str(message.id)
+    form_response.save()
 
 
-async def send_log_message(form_response: FormResponse, title: str):
+async def send_log_message(form_response: FormResponse, title: str, current_group: str = None, reason: str = None):
     """Send a log message to the APPLY_LOG_CHANNEL_ID channel."""
     bot = get_bot()
     await bot.wait_until_ready()
@@ -136,47 +135,52 @@ async def send_log_message(form_response: FormResponse, title: str):
         timestamp=datetime.utcnow(),
     )
 
+
     # Add fields to the embed
-    fields = [
-        ("申請識別碼", str(form_response.uuid)),
-        ("申請狀態", form_response.interview_status.value),
-        ("姓名", form_response.name),
-        ("電子郵件", form_response.email),
-        ("電話號碼", form_response.phone_number),
-        ("高中階段", form_response.high_school_stage),
-        ("城市", form_response.city),
-        ("申請組別", ", ".join(form_response.interested_fields)),
-        ("順序偏好", form_response.preferred_order),
-        ("選擇原因", form_response.reason_for_choice),
-    ]
+    fields_info = {
+        'uuid': '申請識別碼',
+        'interview_status': '申請狀態',
+        'name': '姓名',
+        'email': '電子郵件',
+        'phone_number': '電話號碼',
+        'interested_fields': '申請組別',
+        'high_school_stage': '高中階段',
+        'city': '城市',
+        'preferred_order': '順序偏好',
+        'reason_for_choice': '選擇原因',
+        'related_experience': '相關經驗',
+    }
 
-    if form_response.related_experience:
-        fields.append(("相關經驗", form_response.related_experience))
+    embed_fields = ['uuid', 'interview_status', 'name', 'email']
+    full_content = _generate_full_content(fields_info, form_response)
 
-    for name, value in fields:
+    # Add fields to the embed
+    for field in embed_fields:
+        value = getattr(form_response, field, None)
+        if field == 'interview_status':
+            # Use Enum's value to get the Chinese translation for interview status
+            value = form_response.interview_status.value
         if value:
-            value = truncate(str(value))
-            embed.add_field(name=name, value=value, inline=False)
+            if isinstance(value, list):
+                value = ", ".join(value)
+            embed.add_field(name=fields_info[field], value=truncate(str(value)), inline=False)
+
+
+    if current_group:
+        embed.add_field(name="加入組別", value=current_group, inline=False)
 
     # Add history
     if form_response.history:
         history_str = "\n".join(form_response.history)
         embed.add_field(name="歷史紀錄", value=history_str, inline=False)
 
-    # Create a text attachment with full content
-    full_content = ""
-    for name, value in fields:
-        if value:
-            full_content += f"{name}: {value}\n"
-    if form_response.history:
-        full_content += "\n歷史紀錄:\n" + "\n".join(form_response.history)
+    if reason:
+        embed.add_field(name="原因", value=reason, inline=False)
+        full_content += f"\n\n決議原因:\n {reason}\n"
 
-    # Using io.StringIO for file attachment
+    # Attach full content as a file
     file_stream = io.StringIO(full_content)
-    file = discord.File(
-        fp=file_stream,
-        filename=f"application_{form_response.uuid}_details.txt",
-    )
+    file = discord.File(fp=file_stream, filename=f"application_{form_response.uuid}.txt")
 
     await channel.send(embed=embed, file=file)
 
@@ -205,52 +209,94 @@ def get_view_for_stage(form_response: FormResponse):
 
 
 async def send_stage_embed(form_response: FormResponse, user):
-    """Send the embed for the current stage."""
+    """Sends an embed for the current application stage.
+
+    Args:
+        form_response (FormResponse): The response object containing form data.
+        user: The user who submitted the form.
+    """
     bot = get_bot()
     channel = bot.get_channel(APPLY_FORM_CHANNEL_ID)
     if channel is None:
         print(f"Channel with ID {APPLY_FORM_CHANNEL_ID} not found.")
         return
 
-    # Create the embed
+    # Stage titles mapping
     stage_titles = {
         InterviewStatus.NOT_CONTACTED: "Stage 2: 等待聯繫",
         InterviewStatus.EMAIL_SENT: "Stage 3: 試圖安排面試",
         InterviewStatus.INTERVIEW_SCHEDULED: "Stage 4: 面試已安排",
         InterviewStatus.INTERVIEW_PASSED_WAITING_MANAGER_FORM: "Stage 6: 負責人填寫資料",
-        InterviewStatus.INTERVIEW_PASSED_WAITING_FOR_FORM: "Stage 7: 等待申請者填寫資料",
     }
 
+    # Create the embed
+    embed_title = stage_titles.get(form_response.interview_status, "申請進度更新")
     embed = discord.Embed(
-        title=stage_titles.get(form_response.interview_status, "申請進度更新"),
+        title=embed_title,
         description="申請進度已更新。",
         color=get_embed_color(form_response.interview_status),
         timestamp=datetime.utcnow(),
     )
 
+    fields_info = {
+        'uuid': '申請識別碼',
+        'interview_status': '申請狀態',
+        'name': '姓名',
+        'email': '電子郵件',
+        'phone_number': '電話號碼',
+        'interested_fields': '申請組別',
+        'high_school_stage': '高中階段',
+        'city': '城市',
+        'preferred_order': '順序偏好',
+        'reason_for_choice': '選擇原因',
+        'related_experience': '相關經驗',
+    }
+
+    embed_fields = ['uuid', 'interview_status', 'name', 'email', 'phone_number', 'interested_fields']
+    full_content = _generate_full_content(fields_info, form_response)
+
+    # Attach full content as a file
+    file_stream = io.StringIO(full_content)
+    file = discord.File(fp=file_stream, filename=f"application_{form_response.uuid}.txt")
+
     # Add fields to the embed
-    fields = [
-        ("申請識別碼", str(form_response.uuid)),
-        ("申請狀態", form_response.interview_status.value),
-        ("姓名", form_response.name),
-        ("電子郵件", form_response.email),
-        ("電話號碼", form_response.phone_number),
-        ("高中階段", form_response.high_school_stage),
-        ("城市", form_response.city),
-        ("申請組別", ", ".join(form_response.interested_fields)),
-        ("順序偏好", form_response.preferred_order),
-        ("選擇原因", form_response.reason_for_choice),
-    ]
-
-    if form_response.related_experience:
-        fields.append(("相關經驗", form_response.related_experience))
-
-    for name, value in fields:
+    for field in embed_fields:
+        value = getattr(form_response, field, None)
+        if field == 'interview_status':
+            # Use Enum's value to get the Chinese translation for interview status
+            value = form_response.interview_status.value
         if value:
-            value = truncate(str(value))
-            embed.add_field(name=name, value=value, inline=False)
+            if isinstance(value, list):
+                value = ", ".join(value)
+            embed.add_field(name=fields_info[field], value=truncate(str(value)), inline=False)
 
-    # Create view with buttons based on the current stage
+
     view = get_view_for_stage(form_response)
+    await channel.send(embed=embed, view=view, file=file)
 
-    await channel.send(embed=embed, view=view)
+
+def _generate_full_content(fields_info, form_response):
+    """Generates the full content for the file to be attached.
+
+    Args:
+        fields_info (dict): A dictionary of field names and their display names.
+        form_response (FormResponse): The response object.
+
+    Returns:
+        str: The full content for the file.
+    """
+    content = ""
+    for field, display_name in fields_info.items():
+        value = getattr(form_response, field, None)
+        if field == 'interview_status':
+            # Use Enum's value to get the Chinese translation for interview status
+            value = form_response.interview_status.value
+        if value:
+            if isinstance(value, list):
+                value = ", ".join(value)
+            content += f"{display_name}: {value}\n"
+
+    if form_response.history:
+        content += "\n歷史紀錄:\n" + "\n".join(form_response.history)
+
+    return content

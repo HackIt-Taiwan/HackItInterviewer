@@ -22,7 +22,7 @@ class FailureReasonModal(Modal):
     def __init__(self, form_response: FormResponse, action: str):
         super().__init__(title="請填寫原因")
         self.form_response = form_response
-        self.action = action  # '取消' 或 '面試失敗'
+        self.action = action  # 'cancel' or 'fail'
         self.reason_input = TextInput(
             label="原因",
             style=discord.TextStyle.long,
@@ -40,7 +40,7 @@ class FailureReasonModal(Modal):
         # Update the form_response with the reason
         reason = self.reason_input.value
         now_str = datetime.utcnow().strftime("%Y/%m/%d %H:%M")
-        history_entry = f"{now_str} --- {self.action} by {interaction.user.name}: {reason}"
+        history_entry = f"{now_str} --- {self.action} by {interaction.user.name}"
 
         if not self.form_response.history:
             self.form_response.history = []
@@ -54,18 +54,12 @@ class FailureReasonModal(Modal):
 
         self.form_response.save()
 
-        # Edit the embed to include the reason and disable buttons
-        embed = interaction.message.embeds[0]
-        embed.title = f"申請已{self.action}"
-        embed.color = get_embed_color(self.form_response.interview_status)
-        embed.add_field(name=f"{self.action}原因", value=reason, inline=False)
-        embed.add_field(name="歷史紀錄", value="\n".join(self.form_response.history), inline=False)
         await interaction.message.delete()
         await interaction.response.send_message(f"已更新{self.action}原因（存放於 <#1292599320020783104> )。", ephemeral=True)
 
 
         # Send log message
-        await send_log_message(self.form_response, f"申請已{self.action}")
+        await send_log_message(self.form_response, f"申請已{self.action}", reason=reason)
 
 
 class TransferToTeamModal(Modal):
@@ -245,5 +239,5 @@ class ManagerFillInfoModal2(View):
         self.form_response.save()
 
         redis_client.delete(f"manager_fill:{self.form_response.uuid}")
-        await interaction.response.send_message("資料填寫成功！", ephemeral=True)
-        await send_log_message(self.form_response, "面試通過，已填寫資料。")
+        await interaction.response.send_message("資料填寫成功，已完成該成員面試相關事務！", ephemeral=True)
+        await send_log_message(self.form_response, "面試通過，已填寫資料", select.values[0])

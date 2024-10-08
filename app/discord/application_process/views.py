@@ -1,4 +1,5 @@
 # app/discord/application_process/views.py
+import io
 
 import discord
 from discord.ui import Button, View
@@ -12,6 +13,7 @@ from .helpers import (
     get_bot,
     get_embed_color,
     APPLY_FORM_CHANNEL_ID,
+    send_stage_embed, _generate_full_content,
 )
 from .modals import (
     FailureReasonModal,
@@ -101,61 +103,6 @@ class AcceptOrCancelView(FormResponseView):
         # Open modal to input cancellation reason
         modal = FailureReasonModal(self.form_response, action="取消")
         await interaction.response.send_modal(modal)
-
-
-async def send_stage_embed(form_response: FormResponse, user):
-    """Send the embed for the current stage."""
-    bot = get_bot()
-    channel = bot.get_channel(APPLY_FORM_CHANNEL_ID)
-    if channel is None:
-        print(f"Channel with ID {APPLY_FORM_CHANNEL_ID} not found.")
-        return
-
-    # Create the embed
-    stage_titles = {
-        InterviewStatus.NOT_CONTACTED: "Stage 2: 等待聯繫",
-        InterviewStatus.EMAIL_SENT: "Stage 3: 試圖安排面試",
-        InterviewStatus.INTERVIEW_SCHEDULED: "Stage 4: 面試已安排",
-        InterviewStatus.INTERVIEW_PASSED_WAITING_MANAGER_FORM: "Stage 6: 負責人填寫資料",
-        InterviewStatus.INTERVIEW_PASSED_WAITING_FOR_FORM: "Stage 7: 等待申請者填寫資料",
-    }
-
-    embed = discord.Embed(
-        title=stage_titles.get(form_response.interview_status, "申請進度更新"),
-        description="申請進度已更新。",
-        color=get_embed_color(form_response.interview_status),
-        timestamp=datetime.utcnow(),
-    )
-
-    # Add fields to the embed
-    fields = [
-        ("申請識別碼", str(form_response.uuid)),
-        ("申請狀態", form_response.interview_status.value),
-        ("姓名", form_response.name),
-        ("電子郵件", form_response.email),
-        ("電話號碼", form_response.phone_number),
-        ("高中階段", form_response.high_school_stage),
-        ("城市", form_response.city),
-        ("申請組別", ", ".join(form_response.interested_fields)),
-        ("順序偏好", form_response.preferred_order),
-        ("選擇原因", form_response.reason_for_choice),
-    ]
-
-    if form_response.related_experience:
-        fields.append(("相關經驗", form_response.related_experience))
-
-    for name, value in fields:
-        if value:
-            value = truncate(str(value))
-            embed.add_field(name=name, value=value, inline=False)
-
-    # Create view with buttons based on the current stage
-    view = get_view_for_stage(form_response)
-
-    # Send the message and update last_message_id
-    message = await channel.send(embed=embed, view=view)
-    form_response.last_message_id = str(message.id)
-    form_response.save()
 
 
 def get_view_for_stage(form_response: FormResponse):
@@ -373,21 +320,40 @@ async def send_interview_result_embed(form_response: FormResponse, user):
         timestamp=datetime.utcnow(),
     )
 
-    # Add fields to the embed
-    fields = [
-        ("申請識別碼", str(form_response.uuid)),
-        ("姓名", form_response.name),
-        ("電子郵件", form_response.email),
-        ("申請組別", ", ".join(form_response.interested_fields)),
-    ]
+    fields_info = {
+        'uuid': '申請識別碼',
+        'interview_status': '申請狀態',
+        'name': '姓名',
+        'email': '電子郵件',
+        'phone_number': '電話號碼',
+        'interested_fields': '申請組別',
+        'high_school_stage': '高中階段',
+        'city': '城市',
+        'preferred_order': '順序偏好',
+        'reason_for_choice': '選擇原因',
+        'related_experience': '相關經驗',
+    }
 
-    for name, value in fields:
+    embed_fields = ['uuid', 'interview_status', 'name', 'email', 'phone_number', 'interested_fields']
+    full_content = _generate_full_content(fields_info, form_response)
+
+    # Attach full content as a file
+    file_stream = io.StringIO(full_content)
+    file = discord.File(fp=file_stream, filename=f"application_{form_response.uuid}.txt")
+
+    # Add fields to the embed
+    for field in embed_fields:
+        value = getattr(form_response, field, None)
+        if field == 'interview_status':
+            # Use Enum's value to get the Chinese translation for interview status
+            value = form_response.interview_status.value
         if value:
-            value = truncate(str(value))
-            embed.add_field(name=name, value=value, inline=False)
+            if isinstance(value, list):
+                value = ", ".join(value)
+            embed.add_field(name=fields_info[field], value=truncate(str(value)), inline=False)
 
     view = InterviewResultView(form_response)
-    message = await channel.send(embed=embed, view=view)
+    message = await channel.send(embed=embed, view=view, file=file)
     form_response.last_message_id = str(message.id)
     form_response.save()
 
@@ -490,3 +456,62 @@ class ManagerFillFormView(FormResponseView):
             return
         modal = FailureReasonModal(self.form_response, action="取消")
         await interaction.response.send_modal(modal)
+
+class FindMyView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="查找負責案件", style=discord.ButtonStyle.primary, custom_id="find_my_button")
+    async def find_my_button(self, interaction: discord.Interaction, button: Button):
+        """Handle the button interaction to trigger the find-my logic."""
+        if button.custom_id != "find_my_button":
+            return
+
+        print(interaction.user.id)
+        staff_member = Staff.objects(discord_user_id=str(interaction.user.id)).first()
+        print(staff_member.uuid)
+        if staff_member is None:
+            no_staff_embed = discord.Embed(description=f"使用者 {interaction.user.mention} 越權查詢！", color=0xff6666)
+            await interaction.response.send_message(embed=no_staff_embed, ephemeral=True)
+            return
+
+        user_apps = FormResponse.objects(
+            manager_id=str(staff_member.uuid),
+            interview_status__nin=[
+                InterviewStatus.CANCELLED,
+                InterviewStatus.INTERVIEW_PASSED,
+                InterviewStatus.INTERVIEW_FAILED,
+            ],
+        )
+
+        if not user_apps:
+            no_cases_embed = discord.Embed(description="目前沒有負責的案件。", color=0xff6666)
+            await interaction.response.send_message(embed=no_cases_embed, ephemeral=True)
+            return
+
+        embeds = []
+        description = ""
+        max_length = 1024 - 80
+
+        for app in user_apps:
+
+            # Construct the message link
+            if app.last_message_id:
+                message_link = f"https://discord.com/channels/{interaction.guild.id}/{APPLY_FORM_CHANNEL_ID}/{app.last_message_id}"
+                message_jump = f"[跳轉到訊息]({message_link})"
+            else:
+                message_jump = "無法取得訊息連結"
+
+            line = f"{app.name} -- {app.interview_status.value} -- {app.email} \n {', '.join(app.interested_fields)} / {message_jump}\n\n"
+            if len(description) + len(line) > max_length:
+                embed = discord.Embed(description=description, color=0x3498DB)
+                embeds.append(embed)
+                description = ""
+            description += line
+
+        if description:
+            embed = discord.Embed(description=description)
+            embeds.append(embed)
+
+        for embed in embeds:
+            await interaction.response.send_message(embed=embed, ephemeral=True)

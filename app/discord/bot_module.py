@@ -20,7 +20,6 @@ application_process_setup(bot)
 
 @bot.event
 async def on_ready():
-    print(f"Bots are ready!")
     from app.discord.application_process.views import (
         AcceptOrCancelView,
         ContactOrFailView,
@@ -28,6 +27,7 @@ async def on_ready():
         AttendOrNoShowView,
         InterviewResultView,
         ManagerFillFormView,
+        FindMyView,
     )
 
     bot.add_view(AcceptOrCancelView())
@@ -36,6 +36,8 @@ async def on_ready():
     bot.add_view(AttendOrNoShowView())
     bot.add_view(InterviewResultView())
     bot.add_view(ManagerFillFormView())
+    bot.add_view(FindMyView())
+
 
 def get_bot():
     return bot
