@@ -34,11 +34,17 @@ class FormResponseView(View):
     async def ensure_form_response(self, interaction: discord.Interaction):
         """Ensure self.form_response is set, retrieving it from the database if necessary."""
         if self.form_response is None:
+            print("Form response not set, retrieving from database.")
+            print("Interaction message ID:", interaction.message.id)
             last_message_id = str(interaction.message.id)
             self.form_response = FormResponse.objects(last_message_id=last_message_id).first()
+            print("Form response found:", self.form_response)
+            print("form response ID:", self.form_response.uuid)
             if not self.form_response:
                 await interaction.response.send_message("表單資料未找到。", ephemeral=True)
                 return False
+        else:
+            print("Form response:", self.form_response.uuid)
         return True
 
 
@@ -479,7 +485,7 @@ class FindMyView(View):
         staff_member = Staff.objects(discord_user_id=str(interaction.user.id)).first()
         if staff_member is None:
             no_staff_embed = discord.Embed(description=f"使用者 {interaction.user.mention} 越權查詢！", color=0xff6666)
-            await interaction.response.send_message(embed=no_staff_embed, ephemeral=True)
+            await interaction.followup.send(embed=no_staff_embed, ephemeral=True)
             return
 
         user_apps = FormResponse.objects(
@@ -493,7 +499,7 @@ class FindMyView(View):
 
         if not user_apps:
             no_cases_embed = discord.Embed(description="目前沒有負責的案件。", color=0xff6666)
-            await interaction.response.send_message(embed=no_cases_embed, ephemeral=True)
+            await interaction.followup.send(embed=no_cases_embed, ephemeral=True)
             return
 
         embeds = []
@@ -534,7 +540,7 @@ class FindMyView(View):
 
         if not not_accepted_apps:
             no_cases_embed = discord.Embed(description="目前沒有未受理的案件。", color=0xff6666)
-            await interaction.response.send_message(embed=no_cases_embed, ephemeral=True)
+            await interaction.followup.send(embed=no_cases_embed, ephemeral=True)
             return
 
         embeds = []
@@ -604,7 +610,7 @@ class FilterCasesView(View):
 
         # Interested Field Select
         self.interested_field_select = Select(
-            placeholder="選擇組別（可選）",
+            placeholder="選擇首選組別（可選）",
             options=[
                 discord.SelectOption(label="公關組", value="公關組"),
                 discord.SelectOption(label="活動企劃組", value="活動企劃組"),

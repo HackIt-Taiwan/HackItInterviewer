@@ -8,3 +8,7 @@
 .idea/
 
 webhook_data.txt
+
+data.csv
+
+curl.py

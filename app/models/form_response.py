@@ -31,7 +31,7 @@ class FormResponse(Document):
     preferred_order = EncryptedStringField(required=False)
     reason_for_choice = EncryptedStringField(required=True)
     related_experience = EncryptedStringField(required=True)
-    signature_url = EncryptedStringField(required=True)
+    signature_url = EncryptedStringField(required=False)
 
     email_hash = StringField(required=True)
     is_duplicate = BooleanField(default=False)
@@ -51,3 +51,4 @@ class FormResponse(Document):
 
 
     meta = {'collection': 'form_response'}
+

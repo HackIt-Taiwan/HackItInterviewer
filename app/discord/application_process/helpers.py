@@ -9,8 +9,8 @@ import discord
 from app.models.form_response import FormResponse, InterviewStatus
 from app.models.staff import Staff
 
-APPLY_FORM_CHANNEL_ID = int(os.getenv("APPLY_FORM_CHANNEL_ID", "0"))
-APPLY_LOG_CHANNEL_ID = int(os.getenv("APPLY_LOG_CHANNEL_ID", "0"))
+APPLY_FORM_CHANNEL_ID = int(os.getenv("APPLY_FORM_CHANNEL_ID", "1293249554568843418"))
+APPLY_LOG_CHANNEL_ID = int(os.getenv("APPLY_LOG_CHANNEL_ID", "1292599320020783104"))
 
 
 def truncate(value, max_length=1024):
@@ -129,7 +129,7 @@ async def send_log_message(form_response: FormResponse, title: str, current_grou
         return
 
     staff = Staff.objects(uuid=form_response.manager_id).first()
-    
+
     if not staff:
         embed = discord.Embed(
             title=title,

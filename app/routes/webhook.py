@@ -5,6 +5,8 @@ from app.utils.encryption import hash_data
 from app.discord.application_process.helpers import send_initial_embed, get_bot
 import asyncio
 
+from app.utils.mail_sender import send_email
+
 webhook_bp = Blueprint('webhook', __name__)
 bot = get_bot()
 
@@ -109,6 +111,13 @@ def webhook():
         future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         future.result()  # This will block until the coroutine finishes and raise exceptions if any
 
+        send_email(
+            subject="Counterspell / 已收到您的工作人員報名表！",
+            recipient=email,
+            template='emails/notification_email.html',
+            name=name,
+            uuid=form_response.uuid
+        )
 
         return jsonify({'status': 'ok'})
     except Exception as e:
