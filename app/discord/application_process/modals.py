@@ -12,8 +12,9 @@ from .helpers import (
     is_authorized,
     get_embed_color,
     send_log_message,
-    send_stage_embed,
+    send_stage_embed, APPLY_LOG_CHANNEL_ID,
 )
+from ...utils.mail_sender import send_email
 
 
 class FailureReasonModal(Modal):
@@ -55,11 +56,10 @@ class FailureReasonModal(Modal):
         self.form_response.save()
 
         await interaction.message.delete()
-        await interaction.response.send_message(f"已更新{self.action}原因（存放於 <#1292599320020783104> )。", ephemeral=True)
-
+        await interaction.response.send_message(f"已完成{self.action}標記（存放於 <#{APPLY_LOG_CHANNEL_ID}>）。", ephemeral=True)
 
         # Send log message
-        await send_log_message(self.form_response, f"申請已{self.action}", reason=reason)
+        await send_log_message(self.form_response, f"申請已標註{self.action}", reason=reason)
 
 
 class TransferToTeamView(View):
@@ -260,5 +260,5 @@ class ManagerFillInfoModal2(View):
         self.form_response.save()
 
         redis_client.delete(f"manager_fill:{self.form_response.uuid}")
-        await interaction.response.send_message("資料填寫成功，已完成該成員面試相關事務！", ephemeral=True)
+        await interaction.response.send_message(f"資料填寫成功，已完成該成員面試相關事務！（<#{APPLY_LOG_CHANNEL_ID}>）", ephemeral=True)
         await send_log_message(self.form_response, "面試通過，已填寫資料", select.values[0])

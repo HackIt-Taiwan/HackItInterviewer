@@ -27,25 +27,18 @@ from .modals import (
 class FormResponseView(View):
     """Base View that handles form_response retrieval."""
 
-    def __init__(self, form_response=None):
+    def __init__(self):
         super().__init__(timeout=None)
-        self.form_response = form_response
 
-    async def ensure_form_response(self, interaction: discord.Interaction):
-        """Ensure self.form_response is set, retrieving it from the database if necessary."""
-        if self.form_response is None:
-            print("Form response not set, retrieving from database.")
-            print("Interaction message ID:", interaction.message.id)
-            last_message_id = str(interaction.message.id)
-            self.form_response = FormResponse.objects(last_message_id=last_message_id).first()
-            print("Form response found:", self.form_response)
-            print("form response ID:", self.form_response.uuid)
-            if not self.form_response:
-                await interaction.response.send_message("表單資料未找到。", ephemeral=True)
-                return False
-        else:
-            print("Form response:", self.form_response.uuid)
-        return True
+    async def get_form_response(self, interaction: discord.Interaction):
+        """Retrieve form_response from the database using interaction.message.id."""
+        last_message_id = str(interaction.message.id)
+        form_response = FormResponse.objects(last_message_id=last_message_id).first()
+        if not form_response:
+            await interaction.response.send_message("表單資料未找到。", ephemeral=True)
+            return None
+        return form_response
+
 
 
 class AcceptOrCancelView(FormResponseView):
@@ -61,7 +54,8 @@ class AcceptOrCancelView(FormResponseView):
         if button.custom_id != "accept_or_cancel_view_accept":
             return
 
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
         # Check permission level of the user
@@ -72,20 +66,20 @@ class AcceptOrCancelView(FormResponseView):
             return
 
         # Update form_response
-        self.form_response.manager_id = str(staff.uuid)
-        self.form_response.interview_status = InterviewStatus.NOT_CONTACTED
+        form_response.manager_id = str(staff.uuid)
+        form_response.interview_status = InterviewStatus.NOT_CONTACTED
         now_str = datetime.utcnow().strftime("%Y/%m/%d %H:%M")
         history_entry = f"{now_str} --- 受理 by {interaction.user.name}"
 
-        if not self.form_response.history:
-            self.form_response.history = []
-        self.form_response.history.append(history_entry)
-        self.form_response.save()
+        if not form_response.history:
+            form_response.history = []
+        form_response.history.append(history_entry)
+        form_response.save()
 
         # Proceed to next stage
         await interaction.response.send_message("已受理，進入下一階段。", ephemeral=True)
         await interaction.message.delete()
-        await send_stage_embed(self.form_response, interaction.user)
+        await send_stage_embed(form_response, interaction.user)
 
     @discord.ui.button(
         label="取消",
@@ -97,7 +91,8 @@ class AcceptOrCancelView(FormResponseView):
         if button.custom_id != "accept_or_cancel_view_cancel":
             return
 
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
         # Identity verification
@@ -108,7 +103,7 @@ class AcceptOrCancelView(FormResponseView):
             return
 
         # Open modal to input cancellation reason
-        modal = FailureReasonModal(self.form_response, action="取消")
+        modal = FailureReasonModal(form_response, action="取消")
         await interaction.response.send_modal(modal)
 
 
@@ -117,13 +112,13 @@ def get_view_for_stage(form_response: FormResponse):
     status = form_response.interview_status
 
     if status == InterviewStatus.NOT_CONTACTED:
-        return ContactOrFailView(form_response)
+        return ContactOrFailView()
     elif status == InterviewStatus.EMAIL_SENT:
-        return ArrangeOrCancelView(form_response)
+        return ArrangeOrCancelView()
     elif status == InterviewStatus.INTERVIEW_SCHEDULED:
-        return AttendOrNoShowView(form_response)
+        return AttendOrNoShowView()
     elif status == InterviewStatus.INTERVIEW_PASSED_WAITING_MANAGER_FORM:
-        return ManagerFillFormView(form_response)
+        return ManagerFillFormView()
     else:
         return None  # No buttons needed
 
@@ -138,25 +133,26 @@ class ContactOrFailView(FormResponseView):
     )
     async def contacted_button(self, interaction: discord.Interaction, button: Button):
         """Handle Contacted button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
         # Check if the user is the manager
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
-        self.form_response.is_email_contacted = True
-        self.form_response.interview_status = InterviewStatus.EMAIL_SENT
+        form_response.is_email_contacted = True
+        form_response.interview_status = InterviewStatus.EMAIL_SENT
         now_str = datetime.utcnow().strftime("%Y/%m/%d %H:%M")
         history_entry = f"{now_str} --- 已聯繫 by {interaction.user.name}"
 
-        self.form_response.history.append(history_entry)
-        self.form_response.save()
+        form_response.history.append(history_entry)
+        form_response.save()
 
         await interaction.response.send_message("已聯繫，進入下一階段。", ephemeral=True)
         await interaction.message.delete()
-        await send_stage_embed(self.form_response, interaction.user)
+        await send_stage_embed(form_response, interaction.user)
 
     @discord.ui.button(
         label="面試失敗",
@@ -165,13 +161,14 @@ class ContactOrFailView(FormResponseView):
     )
     async def fail_button(self, interaction: discord.Interaction, button: Button):
         """Handle Interview Failed button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
-        modal = FailureReasonModal(self.form_response, action="面試失敗")
+        modal = FailureReasonModal(form_response, action="面試失敗")
         await interaction.response.send_modal(modal)
 
     @discord.ui.button(
@@ -181,13 +178,14 @@ class ContactOrFailView(FormResponseView):
     )
     async def cancel_button(self, interaction: discord.Interaction, button: Button):
         """Handle Cancel button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
-        modal = FailureReasonModal(self.form_response, action="取消")
+        modal = FailureReasonModal(form_response, action="取消")
         await interaction.response.send_modal(modal)
 
 
@@ -201,24 +199,25 @@ class ArrangeOrCancelView(FormResponseView):
     )
     async def arranged_button(self, interaction: discord.Interaction, button: Button):
         """Handle Arranged button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
-        self.form_response.is_interview_scheduled = True
-        self.form_response.interview_status = InterviewStatus.INTERVIEW_SCHEDULED
+        form_response.is_interview_scheduled = True
+        form_response.interview_status = InterviewStatus.INTERVIEW_SCHEDULED
         now_str = datetime.utcnow().strftime("%Y/%m/%d %H:%M")
         history_entry = f"{now_str} --- 已安排面試 by {interaction.user.name}"
 
-        self.form_response.history.append(history_entry)
-        self.form_response.save()
+        form_response.history.append(history_entry)
+        form_response.save()
 
         await interaction.response.send_message("已安排面試，進入下一階段。", ephemeral=True)
         await interaction.message.delete()
-        await send_stage_embed(self.form_response, interaction.user)
+        await send_stage_embed(form_response, interaction.user)
 
     @discord.ui.button(
         label="已取消",
@@ -227,13 +226,14 @@ class ArrangeOrCancelView(FormResponseView):
     )
     async def cancel_button(self, interaction: discord.Interaction, button: Button):
         """Handle Cancel button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
-        modal = FailureReasonModal(self.form_response, action="取消")
+        modal = FailureReasonModal(form_response, action="取消")
         await interaction.response.send_modal(modal)
 
 
@@ -247,25 +247,26 @@ class AttendOrNoShowView(FormResponseView):
     )
     async def attended_button(self, interaction: discord.Interaction, button: Button):
         """Handle Attended button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
-        self.form_response.is_attended_interview = True
+        form_response.is_attended_interview = True
         now_str = datetime.utcnow().strftime("%Y/%m/%d %H:%M")
         history_entry = f"{now_str} --- 面試已出席 by {interaction.user.name}"
 
-        self.form_response.history.append(history_entry)
-        self.form_response.save()
+        form_response.history.append(history_entry)
+        form_response.save()
 
         # Proceed to next stage
         await interaction.response.send_message("面試已出席，進入下一階段。", ephemeral=True)
         await interaction.message.delete()
         # Send the interview result embed
-        await send_interview_result_embed(self.form_response, interaction.user)
+        await send_interview_result_embed(form_response, interaction.user)
 
     @discord.ui.button(
         label="未出席",
@@ -274,25 +275,26 @@ class AttendOrNoShowView(FormResponseView):
     )
     async def no_show_button(self, interaction: discord.Interaction, button: Button):
         """Handle No Show button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
-        self.form_response.interview_status = InterviewStatus.NO_SHOW
+        form_response.interview_status = InterviewStatus.NO_SHOW
         now_str = datetime.utcnow().strftime("%Y/%m/%d %H:%M")
         history_entry = f"{now_str} --- 未出席面試 by {interaction.user.name}"
 
-        self.form_response.history.append(history_entry)
-        self.form_response.save()
+        form_response.history.append(history_entry)
+        form_response.save()
 
         # Go back to Stage 3
         await interaction.response.send_message("未出席面試，返回安排面試階段。", ephemeral=True)
         await interaction.message.delete()
-        self.form_response.interview_status = InterviewStatus.EMAIL_SENT
-        await send_stage_embed(self.form_response, interaction.user)
+        form_response.interview_status = InterviewStatus.EMAIL_SENT
+        await send_stage_embed(form_response, interaction.user)
 
     @discord.ui.button(
         label="取消",
@@ -301,13 +303,14 @@ class AttendOrNoShowView(FormResponseView):
     )
     async def cancel_button(self, interaction: discord.Interaction, button: Button):
         """Handle Cancel button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
-        modal = FailureReasonModal(self.form_response, action="取消")
+        modal = FailureReasonModal(form_response, action="取消")
         await interaction.response.send_modal(modal)
 
 
@@ -318,7 +321,6 @@ async def send_interview_result_embed(form_response: FormResponse, user):
     if channel is None:
         print(f"Channel with ID {APPLY_FORM_CHANNEL_ID} not found.")
         return
-
 
     # Create the embed
     embed = discord.Embed(
@@ -360,7 +362,7 @@ async def send_interview_result_embed(form_response: FormResponse, user):
                 value = ", ".join(value)
             embed.add_field(name=fields_info[field], value=truncate(str(value)), inline=False)
 
-    view = InterviewResultView(form_response)
+    view = InterviewResultView()
     message = await channel.send(embed=embed, view=view, file=file)
     form_response.last_message_id = str(message.id)
     form_response.save()
@@ -376,23 +378,24 @@ class InterviewResultView(FormResponseView):
     )
     async def pass_button(self, interaction: discord.Interaction, button: Button):
         """Handle Interview Passed button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
-        self.form_response.interview_status = InterviewStatus.INTERVIEW_PASSED_WAITING_MANAGER_FORM
+        form_response.interview_status = InterviewStatus.INTERVIEW_PASSED_WAITING_MANAGER_FORM
         now_str = datetime.utcnow().strftime("%Y/%m/%d %H:%M")
         history_entry = f"{now_str} --- 面試通過 by {interaction.user.name}"
 
-        self.form_response.history.append(history_entry)
-        self.form_response.save()
+        form_response.history.append(history_entry)
+        form_response.save()
 
         await interaction.response.send_message("面試通過，請填寫資料。", ephemeral=True)
         await interaction.message.delete()
-        await send_stage_embed(self.form_response, interaction.user)
+        await send_stage_embed(form_response, interaction.user)
 
     @discord.ui.button(
         label="面試失敗",
@@ -401,13 +404,14 @@ class InterviewResultView(FormResponseView):
     )
     async def fail_button(self, interaction: discord.Interaction, button: Button):
         """Handle Interview Failed button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
-        modal = FailureReasonModal(self.form_response, action="面試失敗")
+        modal = FailureReasonModal(form_response, action="面試失敗")
         await interaction.response.send_modal(modal)
 
     @discord.ui.button(
@@ -417,14 +421,15 @@ class InterviewResultView(FormResponseView):
     )
     async def transfer_button(self, interaction: discord.Interaction, button: Button):
         """Handle Transfer to Another Team button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
-        view = TransferToTeamView(self.form_response)
+        view = TransferToTeamView(form_response)
         embed = discord.Embed(
             title="轉接至他組",
             description="請選擇新的組別和新的負責人。\n請盡速選擇，否則資料將被清空。\n\n按鈕請勿重複使用！！！。",
@@ -444,15 +449,16 @@ class ManagerFillFormView(FormResponseView):
     )
     async def fill_form_button(self, interaction: discord.Interaction, button: Button):
         """Handle Fill Form button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
 
         # Open modal for manager to fill in information
-        modal = ManagerFillInfoModal1(self.form_response)
+        modal = ManagerFillInfoModal1(form_response)
         await interaction.response.send_modal(modal)
 
     @discord.ui.button(
@@ -462,13 +468,14 @@ class ManagerFillFormView(FormResponseView):
     )
     async def cancel_button(self, interaction: discord.Interaction, button: Button):
         """Handle Cancel button click."""
-        if not await self.ensure_form_response(interaction):
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
             return
 
-        if not is_authorized(interaction.user, self.form_response):
+        if not is_authorized(interaction.user, form_response):
             await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
             return
-        modal = FailureReasonModal(self.form_response, action="取消")
+        modal = FailureReasonModal(form_response, action="取消")
         await interaction.response.send_modal(modal)
 
 class FindMyView(View):

@@ -59,7 +59,7 @@ class Staff(Document):
     active_status = StringField(required=False, choices=['Active', 'Inactive', 'Suspended'])  # 活躍狀態
 
     # Permission level (-1, 0, 1, 2, 3, 4, 5, 6)
-    permission_level = IntField(default=0, choices=[-1, 0, 1, 2, 3, 4, 5, 6])
+    permission_level = IntField(default=2, choices=[-1, 0, 1, 2, 3, 4, 5, 6])
     # -1: 封殺；0: 成員；1: 組副負責人；2: 組負責人；3: 部負責人；4: 負責人；5: 顧問；6: 外星人
 
     # Additional details

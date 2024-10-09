@@ -1,21 +1,7 @@
 # app/discord/application_process/commands.py
 import os
 
-from discord.ext import commands
-
-from app.models.form_response import FormResponse, InterviewStatus
-from app.models.staff import Staff
-from .helpers import send_initial_embed, truncate, APPLY_FORM_CHANNEL_ID
 import discord
-
-
-import discord
-from discord.ext import commands
-from discord.ui import View, Button
-
-from app.models.form_response import FormResponse, InterviewStatus
-from app.models.staff import Staff
-from .helpers import send_initial_embed, truncate, APPLY_FORM_CHANNEL_ID
 from .views import FindMyView
 
 

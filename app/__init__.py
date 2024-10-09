@@ -5,7 +5,9 @@ from flask import Flask
 
 from dotenv import load_dotenv
 from flask_mailman import Mail
+from jinja2.utils import urlize
 from mongoengine import connect
+from redis.commands.search.querystring import union
 
 app = Flask(__name__)
 mail = Mail()
@@ -28,6 +30,7 @@ def create_app():
 
     # Here to load blueprint
     from app.routes.webhook import webhook_bp
+    from app.routes.email_preview import email_preview_bp
 
     # Here to initialize the app
     connect(host=os.getenv('MONGO_URI'))
@@ -35,5 +38,6 @@ def create_app():
 
     # Here to register blueprint
     app.register_blueprint(webhook_bp)
+    app.register_blueprint(email_preview_bp, url_prefix='/admin/preview')
 
     return app

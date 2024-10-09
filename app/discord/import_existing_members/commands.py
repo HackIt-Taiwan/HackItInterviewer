@@ -12,9 +12,9 @@ def setup(bot):
     async def import_existing_members(ctx, user: discord.Member):
         """Command to start the import process for existing members."""
         await ctx.message.delete()
-        if str(ctx.author.id) != EXECUTOR_DISCORD_ID:
-            await ctx.send("你無權使用此命令。")
-            return
+        # if str(ctx.author.id) != EXECUTOR_DISCORD_ID:
+        #     await ctx.send("你無權使用此命令。")
+        #     return
 
         if has_submitted_form(user.id):
             await ctx.send(f"{user.mention} 已經填寫過表單，不能再次填寫。")

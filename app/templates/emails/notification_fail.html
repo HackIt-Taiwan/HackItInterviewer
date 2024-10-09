@@ -78,12 +78,13 @@
 
         .uuid {
             font-size: 13px;
-            word-break: break-all;
             color: #666;
             background-color: #f7f7f7;
             padding: 8px 12px;
             border-radius: 4px;
             margin-top: 10px;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
 
         .guide-link {
@@ -101,21 +102,18 @@
 <body>
 <div class="container">
     <h1>{{ name }} 您好，</h1>
-    <p>我們已收到您填寫的 <strong>Counterspell</strong> 招募報名表單。</p>
-    <p>非常感謝您的參與，您的報名表已成功提交。</p>
-    <p>以下是您的申請識別碼，將用於未來的追蹤與查詢：</p>
+    <p>感謝您對 <strong>Counterspell</strong> 招募機會的興趣與申請。</p>
+    <p>我們非常感謝您參與此次的招募，經過審慎考量，我們認為您具備優秀的能力與經驗，但目前這個職位或許並非最適合您的舞台。</p>
+
+    <p>申請識別碼：</p>
     <p class="uuid">{{ uuid }}</p>
-    <p>我們會盡快與您聯繫。</p>
-    <p>請注意以下您應該知曉的相關權利：</p>
-    <ul>
-        <li>我們會收集和處理您提供的個人資料，以便完成您的請求。這些資料僅用於 HackIt 的行政目的，並受到相關法律的保護。</li>
-        <li>您有權查閱、修改或刪除我們保存的您的個人資料。如希望行使這些權利，請隨時與我們聯繫。</li>
-        <li>我們不會在未經您同意的情況下將您的個人資料提供給第三方，除非為了遵守法律義務或保護我們的合法權益。</li>
-        <li>請勿以任何方式濫用或攻擊我們的服務，包括但不限於惡意攻擊、盜用他人身份等。否則，我們將採取相應措施，並保留追溯法律責任的權利。</li>
-        <li>若您發現任何安全漏洞或其他問題，請立即通知我們，以保護全體使用者的權益。</li>
-        <li>我們保留隨時更改此條款與隱私政策的權利，並會透過電子郵件或網站公告告知您。</li>
-    </ul>
-    <p>如有任何疑問，歡迎透過以下電子郵件與我們聯繫：<a href="mailto:counterspell@hackit.tw">counterspell@hackit.tw</a></p>
+
+    <p>原因如下：</p>
+    <p class="uuid">{{ reason | safe }}</p>
+
+    <p>我們誠摯地感謝您對 Counterspell 的投入，並鼓勵您繼續關注我們未來的招募機會。期待能在未來與您再次合作。</p>
+    <p>如有任何問題或想了解更多未來的機會，歡迎隨時與我們聯繫。</p>
+    <p>您可以透過電子郵件聯繫我們：<a href="mailto:counterspell@hackit.tw">counterspell@hackit.tw</a></p>
     <div class="footer">
         <p>此為自動發送的郵件，請勿回覆。</p>
         <p>&copy; 2024 HackIt</p>
