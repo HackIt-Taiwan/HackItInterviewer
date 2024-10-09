@@ -21,7 +21,7 @@ field_mapping = {
     '3DqecY2ogvR5': '排一排，告訴我們你的優先選擇吧',
     'fV33uN18Aq5b': '為什麼選擇這些組別',
     'bdXbCUl1iiqq': '有什麼相關經驗或技能嗎',
-    'Gkg271OtI9Bw': '是否同意我們蒐集並使用您的資料（簽名）'
+    '2Etw3QvT5GT8': '是否同意我們蒐集並使用您的資料（簽名）'
 }
 
 high_school_stage_mapping = {
@@ -46,8 +46,6 @@ anti = []
 def webhook():
     with open('webhook_data.txt', 'w', encoding='utf-8') as f:
         f.write(str(request.json))
-
-    print(request.json)
 
     try:
         form_data = request.json.get('answers', [])
@@ -82,7 +80,7 @@ def webhook():
                     reason_for_choice = field_value
                 case 'bdXbCUl1iiqq':  # related experience
                     related_experience = field_value
-                case 'Gkg271OtI9Bw':  # signature URL
+                case '2Etw3QvT5GT8':  # signature URL
                     signature_url = field_value
 
         email_hash = hash_data(email)
