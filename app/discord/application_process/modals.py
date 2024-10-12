@@ -14,6 +14,7 @@ from .helpers import (
     send_log_message,
     send_stage_embed, APPLY_LOG_CHANNEL_ID,
 )
+from ...utils.encryption import hash_data
 from ...utils.mail_sender import send_email
 
 
@@ -243,6 +244,7 @@ class ManagerFillInfoModal2(View):
         staff = Staff(
             name=stored_data["name"],
             email=stored_data["email"],
+            email_hash=hash_data(stored_data["email"]),
             phone_number=stored_data["phone_number"],
             high_school_stage=stored_data["high_school_stage"],
             city=stored_data["city"],

@@ -76,6 +76,7 @@ class ExistingMemberJobInfoCollectionModal(Modal):
             name=user_data["name"],
             nickname=user_data["nickname"],
             email=user_data["email"],
+            email_hash=user_data["email_hash"],
             phone_number=user_data["phone"],
             high_school_stage=user_data["high_school_stage"],
             city=user_data["city"],

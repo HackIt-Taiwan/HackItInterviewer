@@ -35,6 +35,7 @@ class Staff(Document):
     name = EncryptedStringField(required=True)
     nickname = EncryptedStringField(required=False)
     email = EncryptedStringField(required=True)
+    email_hash = StringField(required=True)
     phone_number = EncryptedStringField(required=True)
     high_school_stage = EncryptedStringField(required=True)
     city = EncryptedStringField(required=True)

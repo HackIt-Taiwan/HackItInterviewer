@@ -598,7 +598,7 @@ class FilterCasesView(View):
     def __init__(self):
         super().__init__(timeout=600)
         self.status = None
-        self.first_interested_field = None
+        self.interested_field = None
         self.manager = None
 
         # Status Select
@@ -617,7 +617,7 @@ class FilterCasesView(View):
 
         # Interested Field Select
         self.interested_field_select = Select(
-            placeholder="選擇首選組別（可選）",
+            placeholder="選擇組別（可選）",
             options=[
                 discord.SelectOption(label="公關組", value="公關組"),
                 discord.SelectOption(label="活動企劃組", value="活動企劃組"),
@@ -657,7 +657,7 @@ class FilterCasesView(View):
         await interaction.response.defer()
 
     async def interested_field_select_callback(self, interaction: discord.Interaction):
-        self.first_interested_field = self.interested_field_select.values[0] if self.interested_field_select.values else None
+        self.interested_field = self.interested_field_select.values[0] if self.interested_field_select.values else None
         await interaction.response.defer()
 
     async def manager_select_callback(self, interaction: discord.Interaction):
@@ -672,7 +672,7 @@ class FilterCasesView(View):
         await interaction.response.defer(ephemeral=True)
 
         # Handle the search logic
-        if not self.status and not self.first_interested_field and not self.manager:
+        if not self.status and not self.interested_field and not self.manager:
             await interaction.followup.send("請至少選擇一個過濾條件。", ephemeral=True)
             return
 
@@ -698,8 +698,8 @@ class FilterCasesView(View):
                     InterviewStatus.INTERVIEW_FAILED,
                 ]
 
-        if self.first_interested_field:
-            query['interested_fields__startswith'] = self.first_interested_field
+        if self.interested_field:
+            query['interested_fields__contains'] = self.interested_field
 
         if self.manager:
             manager_staff = Staff.objects(discord_user_id=str(self.manager.id)).first()
