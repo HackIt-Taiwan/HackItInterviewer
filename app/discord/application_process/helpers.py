@@ -68,11 +68,19 @@ async def send_initial_embed(form_response: FormResponse):
         return
 
     # Create the embed
-    embed = discord.Embed(
-        title="新申請：等待受理",
-        description="有一個新的申請等待受理。",
-        color=get_embed_color(form_response.interview_status),
-    )
+    if form_response.is_duplicate:
+        embed = discord.Embed(
+            title="新申請：重複申請",
+            description="有一個重複的申請已被收到。",
+            color=0xF1C40F,
+        )
+    else:
+        embed = discord.Embed(
+            title="新申請：等待受理",
+            description="有一個新的申請等待受理。",
+            color=get_embed_color(form_response.interview_status),
+        )
+
     embed.set_footer(text=time.strftime('%Y/%m/%d %H:%M') + " ● HackIt")
 
     # Add fields to the embed
@@ -240,6 +248,7 @@ class SendNotificationButton(View):
                 template='emails/notification_pass.html',
                 name=self.apply_staff.name,
                 uuid=self.apply_staff.uuid,
+                email=self.apply_staff.email,
             )
 
         self.mail_sent = True

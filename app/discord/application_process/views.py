@@ -236,6 +236,29 @@ class ArrangeOrCancelView(FormResponseView):
         modal = FailureReasonModal(form_response, action="取消")
         await interaction.response.send_modal(modal)
 
+    @discord.ui.button(
+        label="轉接至他組",
+        style=discord.ButtonStyle.secondary,
+        custom_id="interview_result_view_transfer",
+    )
+    async def transfer_button(self, interaction: discord.Interaction, button: Button):
+        """Handle Transfer to Another Team button click."""
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
+            return
+
+        if not is_authorized(interaction.user, form_response):
+            await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
+            return
+
+        view = TransferToTeamView(form_response)
+        embed = discord.Embed(
+            title="轉接至他組",
+            description="請選擇新的組別和新的負責人。\n請盡速選擇，否則資料將被清空。\n\n按鈕請勿重複使用！！！。",
+            color=0x3498DB,
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        await interaction.message.delete()
 
 class AttendOrNoShowView(FormResponseView):
     """View for Stage 4: Interview Arranged."""
@@ -313,6 +336,29 @@ class AttendOrNoShowView(FormResponseView):
         modal = FailureReasonModal(form_response, action="取消")
         await interaction.response.send_modal(modal)
 
+    @discord.ui.button(
+        label="轉接至他組",
+        style=discord.ButtonStyle.secondary,
+        custom_id="interview_result_view_transfer",
+    )
+    async def transfer_button(self, interaction: discord.Interaction, button: Button):
+        """Handle Transfer to Another Team button click."""
+        form_response = await self.get_form_response(interaction)
+        if not form_response:
+            return
+
+        if not is_authorized(interaction.user, form_response):
+            await interaction.response.send_message("你無權執行此操作。", ephemeral=True)
+            return
+
+        view = TransferToTeamView(form_response)
+        embed = discord.Embed(
+            title="轉接至他組",
+            description="請選擇新的組別和新的負責人。\n請盡速選擇，否則資料將被清空。\n\n按鈕請勿重複使用！！！。",
+            color=0x3498DB,
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        await interaction.message.delete()
 
 async def send_interview_result_embed(form_response: FormResponse, user):
     """Send the embed for interview result stage."""

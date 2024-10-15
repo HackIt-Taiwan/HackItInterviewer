@@ -10,5 +10,6 @@ def preview():
     email_template = request.args.get('email_template')
     name = request.args.get('name')
     uuid = request.args.get('uuid')
+    email = request.args.get('email')
     reason = request.args.get('reason', '').replace('|', '<br>')
-    return render_template(email_template, name=name, uuid=uuid, reason=reason)
+    return render_template(email_template, name=name, uuid=uuid, reason=reason, email=email)
