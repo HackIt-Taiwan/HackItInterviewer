@@ -5,6 +5,7 @@ from datetime import datetime
 from mongoengine import Document, UUIDField, StringField, IntField, ListField, DateTimeField, EmbeddedDocumentField, \
     BooleanField, EmbeddedDocument
 from app.models.encrypted_string_field import EncryptedStringField
+from app.utils.encryption import hash_data
 
 class ProjectHistory(EmbeddedDocument):
     """Model representing project history."""
@@ -23,6 +24,14 @@ class EmergencyContact(EmbeddedDocument):
     name = EncryptedStringField(required=True)
     relationship = EncryptedStringField(required=True)
     phone_number = EncryptedStringField(required=True)
+
+
+class LarkInfo(EmbeddedDocument):
+    """Model representing emergency contacts."""
+
+    # Basic personal information
+    user_id = EncryptedStringField(required=True)
+    enterprise_email = EncryptedStringField(required=True)
 
 
 class Staff(Document):
@@ -60,7 +69,7 @@ class Staff(Document):
     active_status = StringField(required=False, choices=['Active', 'Inactive', 'Suspended'])  # 活躍狀態
 
     # Permission level (-1, 0, 1, 2, 3, 4, 5, 6)
-    permission_level = IntField(default=2, choices=[-1, 0, 1, 2, 3, 4, 5, 6])
+    permission_level = IntField(default=0, choices=[-1, 0, 1, 2, 3, 4, 5, 6])
     # -1: 封殺；0: 成員；1: 組副負責人；2: 組負責人；3: 部負責人；4: 負責人；5: 顧問；6: 外星人
 
     # Additional details
@@ -75,6 +84,7 @@ class Staff(Document):
     attendance_records = ListField(EncryptedStringField(), required=False)
     last_login = EncryptedStringField(required=False)
     is_signup = BooleanField(default=False)
+    lark_info = EmbeddedDocumentField('LarkInfo', required=False)
 
     # TODO system integration
     available_time_slots = ListField(EncryptedStringField(), required=False)  # 未來將與日曆整合
@@ -82,3 +92,22 @@ class Staff(Document):
     # Meta information
     meta = {'collection': 'staff'}
 
+    @classmethod
+    def find_user_by_email(cls, email):
+        """
+        Retrieve a user by their email.
+        :param email: Email of the user.
+        :return: User object if found, None otherwise.
+        """
+        email_hash = hash_data(email)
+        return cls.objects(email_hash=email_hash).first()
+
+
+    @classmethod
+    def find_user_by_uuid(cls, uuid):
+        """
+        Retrieve a user by their UUID.
+        :param uuid: UUID of the user.
+        :return: User object if found, None otherwise.
+        """
+        return cls.objects(uuid=uuid).first()
