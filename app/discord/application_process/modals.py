@@ -263,4 +263,4 @@ class ManagerFillInfoModal2(View):
 
         redis_client.delete(f"manager_fill:{self.form_response.uuid}")
         await interaction.response.send_message(f"資料填寫成功，已完成該成員面試相關事務！（<#{APPLY_LOG_CHANNEL_ID}>）", ephemeral=True)
-        await send_log_message(self.form_response, "面試通過，已填寫資料", select.values[0])
+        await send_log_message(self.form_response, "面試通過，已填寫資料", select.values[0], apply_staff=staff)

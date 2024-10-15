@@ -37,9 +37,8 @@
 
         .button {
             display: inline-block;
-            padding: 12px 20px;
-            margin-top: 20px;
-            font-size: 15px;
+            padding: 6px 8px;
+            font-size: 14px;
             color: #fff;
             background-color: #0066cc;
             text-decoration: none;
@@ -88,14 +87,20 @@
         }
 
         .guide-link {
-            font-size: 13px;
+            font-size: 15px;
             color: #0066cc;
             text-decoration: none;
-            display: inline-block;
         }
 
         .guide-link:hover {
             text-decoration: underline;
+        }
+
+        .video-link img {
+            width: 100%;
+            max-width: 560px;
+            border-radius: 12px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -105,11 +110,18 @@
     <p>感謝您對 <strong>Counterspell</strong> 招募機會的興趣與申請。</p>
     <p>我們很高興通知您，經過審慎考量，我們認為您的能力與經驗非常符合我們的需求，並正式邀請您加入我們的團隊！</p>
 
-    <p>申請識別碼：</p>
+    <p>團員識別碼：</p>
     <p class="uuid">{{ uuid }}</p>
 
-    <p>若您尚未與我們的團隊取得聯繫，請盡快透過下方方式聯繫我們，以便安排後續的入職手續及相關事宜。</p>
-    <p>您可以透過電子郵件聯繫我們：<a href="mailto:counterspell@hackit.tw">counterspell@hackit.tw</a></p>
+    <p>請點擊以下按鈕來註冊您的 HackID：</p>
+    <div class="button">
+        <a href="https://hackid.hackit.tw/auth/login?uuid={{ uuid }}&email={{ email }}">註冊 ID</a>
+    </div>
+
+    <p>為了協助您順利完成註冊，您可以觀看我們的<a href="https://go.hackit.tw/hackidtutorial" class="guide-link">操作教學影片</a>。</p>
+
+    <p>若有任何疑問，歡迎透過電子郵件聯繫我們：<a href="mailto:counterspell@hackit.tw">counterspell@hackit.tw</a></p>
+
     <div class="footer">
         <p>此為自動發送的郵件，請勿回覆。</p>
         <p>&copy; 2024 HackIt</p>

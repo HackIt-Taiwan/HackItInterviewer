@@ -120,7 +120,7 @@ async def send_initial_embed(form_response: FormResponse):
     form_response.save()
 
 
-async def send_log_message(form_response: FormResponse, title: str, current_group: str = None, reason: str = None):
+async def send_log_message(form_response: FormResponse, title: str, current_group: str = None, reason: str = None, apply_staff: Staff = None):
     """Send a log message to the APPLY_LOG_CHANNEL_ID channel."""
     bot = get_bot()
     await bot.wait_until_ready()
@@ -192,7 +192,7 @@ async def send_log_message(form_response: FormResponse, title: str, current_grou
         full_content += f"\n\n決議原因:\n {reason}\n"
         view = SendNotificationButton(form_response, True, reason)
     else:
-        view = SendNotificationButton(form_response, False)
+        view = SendNotificationButton(form_response, False, apply_staff=apply_staff)
 
     # Attach full content as a file
     file_stream = io.StringIO(full_content)
@@ -207,12 +207,13 @@ async def send_log_message(form_response: FormResponse, title: str, current_grou
 class SendNotificationButton(View):
     """View containing a button to send the recruitment result notification."""
 
-    def __init__(self, form_response: FormResponse, fail: bool, reason: str = None):
+    def __init__(self, form_response: FormResponse, fail: bool, reason: str = None, apply_staff: Staff = None):
         super().__init__(timeout=None)
         self.form_response = form_response
         self.fail = fail
         self.reason = reason
         self.mail_sent = False
+        self.apply_staff = apply_staff
 
     @discord.ui.button(label="發送招募結果通知", style=discord.ButtonStyle.primary, custom_id="send_email_button")
     async def send_email_button(self, interaction: discord.Interaction, button: Button):
@@ -235,10 +236,10 @@ class SendNotificationButton(View):
         else:
             send_email(
                 subject="Counterspell / 招募結果通知",
-                recipient=self.form_response.email,
+                recipient=self.apply_staff.email,
                 template='emails/notification_pass.html',
-                name=self.form_response.name,
-                uuid=self.form_response.uuid,
+                name=self.apply_staff.name,
+                uuid=self.apply_staff.uuid,
             )
 
         self.mail_sent = True
@@ -254,9 +255,9 @@ class SendNotificationButton(View):
         DOMAIN = os.getenv("DOMAIN", "https://interviewer.hackit.tw")
 
         if self.fail:
-            preview_url = f"{DOMAIN}/admin/preview/email?email_template=emails/notification_fail.html&name={self.form_response.name}&uuid={self.form_response.uuid}&reason={self.reason.replace('\n', '|')}"
+            preview_url = f"{DOMAIN}/admin/preview/email?email_template=emails/notification_fail.html&name={self.form_response.name}&uuid={self.form_response.uuid}&email={self.apply_staff.email}&reason={self.reason.replace('\n', '|')}"
         else:
-            preview_url = f"{DOMAIN}/admin/preview/email?email_template=emails/notification_pass.html&name={self.form_response.name}&uuid={self.form_response.uuid}"
+            preview_url = f"{DOMAIN}/admin/preview/email?email_template=emails/notification_pass.html&name={self.apply_staff.name}&uuid={self.apply_staff.uuid}&email={self.apply_staff.email}"
 
         await interaction.response.send_message(
             f"點擊以下連結預覽通知信：\n[點擊我預覽]({preview_url})",
