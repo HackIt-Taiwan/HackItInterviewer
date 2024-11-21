@@ -2,7 +2,6 @@ Flask
 flask_mailman
 python-dotenv
 pycryptodome
-uuid
 discord
 discord.py
 Jinja2
