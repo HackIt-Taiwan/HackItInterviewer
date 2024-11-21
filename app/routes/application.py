@@ -6,7 +6,7 @@ from app.models.form_response import FormResponse
 
 # from app.utils.mail_sender import send_email
 
-application_bp = Blueprint('webhook', __name__)
+application_bp = Blueprint('application', __name__)
 # bot = get_bot()
 
 # TODO: should not use hardcoded values
