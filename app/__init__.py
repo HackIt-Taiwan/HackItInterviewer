@@ -34,7 +34,7 @@ def create_app():
     # mail.init_app(app)
 
     # Here to register blueprint
-    app.register_blueprint(application_bp)
+    app.register_blueprint(application_bp, url_prefix="/apply")
     app.register_blueprint(email_preview_bp, url_prefix="/admin/preview")
 
     return app
