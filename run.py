@@ -1,6 +1,6 @@
 # app.py
 import threading
-from app.discord.bot_module import bot
+# from app.discord.bot_module import bot
 from app import create_app
 import os
 
