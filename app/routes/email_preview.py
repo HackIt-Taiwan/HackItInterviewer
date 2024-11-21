@@ -13,8 +13,3 @@ def preview():
     email = request.args.get('email')
     reason = request.args.get('reason', '').replace('|', '<br>')
     return render_template(email_template, name=name, uuid=uuid, reason=reason, email=email)
-
-
-@email_preview_bp.route('/')
-def testing():
-    return "itworks"

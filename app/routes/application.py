@@ -115,3 +115,8 @@ def webhook():
     except Exception as e:
         print(e)
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@application_bp.route('/')
+def testing():
+    return "itworks"
