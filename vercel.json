@@ -1,5 +1,10 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/run" }
+  "version": 3,
+  "builds": [
+    { "src": "run.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "run.py" }
   ]
 }
+
