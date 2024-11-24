@@ -117,16 +117,16 @@ def first_part():
             f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
         )
 
-        secret = generate_secret()
-        fixed_secret = secret + os.getenv("FIXED_JWT_SECRET")
-        encoded_jwt = jwt.encode(
-            {
-                "sub": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
-                "exp": datetime.now() + timedelta(minutes=15),
-            },
-            fixed_secret,
-            algorithm="HS256",
-        )
+        # secret = generate_secret()
+        # fixed_secret = secret + os.getenv("FIXED_JWT_SECRET")
+        # encoded_jwt = jwt.encode(
+        #     {
+        #         "sub": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
+        #         "exp": datetime.now() + timedelta(minutes=15),
+        #     },
+        #     fixed_secret,
+        #     algorithm="HS256",
+        # )
 
         form_response = {
             "uuid": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
