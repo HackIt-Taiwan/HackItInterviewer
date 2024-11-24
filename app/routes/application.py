@@ -4,7 +4,6 @@ import jwt
 import requests
 # import asyncio
 
-from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, make_response
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
@@ -80,35 +79,34 @@ def first_part():
             field_id = answer.get("id")
             field_value = answer.get("value")
 
-            match field_id:
-                case field_mapping.get("Name"):  # name
-                    name = field_value
-                case field_mapping.get("Email"):
-                    email = field_value
-                case field_mapping.get("Phone"):
-                    phone_number = field_value
-                case field_mapping.get("HighSchoolStage"):
-                    if isinstance(field_value, dict):
-                        stage_id = field_value.get("value", [None])[0]
-                        high_school_stage = high_school_stage_mapping.get(
-                            stage_id, stage_id
-                        )
-                case field_mapping.get("City"):
-                    city = field_value
-                case field_mapping.get("NationalID"):
-                    national_id = field_value
-                case field_mapping.get("InterestedFields"):
-                    interested_field_ids = (
-                        field_value.get("value", [])
-                        if isinstance(field_value, dict)
-                        else []
+            if field_id == field_mapping.get("Name"):
+                name = field_value
+            elif field_id == field_mapping.get("Email"):
+                email = field_value
+            elif field_id == field_mapping.get("Phone"):
+                phone_number = field_value
+            elif field_id == field_mapping.get("HighSchoolStage"):
+                if isinstance(field_value, dict):
+                    stage_id = field_value.get("value", [None])[0]
+                    high_school_stage = high_school_stage_mapping.get(
+                        stage_id, stage_id
                     )
-                    interested_fields = [
-                        interested_fields_mapping.get(field_id, field_id)
-                        for field_id in interested_field_ids
-                    ]
-                case field_mapping.get("Introduction"):
-                    introduction = field_value
+            elif field_id == field_mapping.get("City"):
+                city = field_value
+            elif field_id == field_mapping.get("NationalID"):
+                national_id = field_value
+            elif field_id == field_mapping.get("InterestedFields"):
+                interested_field_ids = (
+                    field_value.get("value", [])
+                    if isinstance(field_value, dict)
+                    else []
+                )
+                interested_fields = [
+                    interested_fields_mapping.get(field_id, field_id)
+                    for field_id in interested_field_ids
+                ]
+            elif field_id == field_mapping.get("Introduction"):
+                introduction = field_value
 
         # Replace this with backend_endpoint api
         # email_hash = hash_data(email)
@@ -148,7 +146,11 @@ def first_part():
         # save to database and send discord here
         headers = {"Authorization": "Bearer " + os.getenv("AUTH_TOKEN")}
 
-        requests.post(url=os.getenv("BACKEND_ENDPOINT") + "/staff/create/new", headers=headers, json=form_response)
+        requests.post(
+            url=os.getenv("BACKEND_ENDPOINT") + "/staff/create/new",
+            headers=headers,
+            json=form_response,
+        )
 
         # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         # future.result()  # This will block until the coroutine finishes and raise exceptions if any
