@@ -157,7 +157,7 @@ def first_part():
         )
 
         if response.status_code != 200:
-            raise Exception("response.text")
+            raise Exception(response.text)
 
         # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         # future.result()  # This will block until the coroutine finishes and raise exceptions if any
