@@ -4,7 +4,7 @@ import jwt
 import requests
 # import asyncio
 
-from urllib import urlparse
+# from urllib import urlparse
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, make_response
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
