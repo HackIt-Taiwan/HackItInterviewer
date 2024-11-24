@@ -17,6 +17,8 @@ def create_app():
     # App configuration
     app.config["DEBUG"] = os.getenv("DEBUG") == "True"
 
+    """No JWT Initialization because we are using dynamic secret"""
+
     # Mail configuration
     # app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     # app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 465))

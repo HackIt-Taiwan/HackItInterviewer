@@ -1,8 +1,14 @@
 # app/routes/application.py
-from datetime import datetime
-from flask import Blueprint, jsonify, request
+import os
+import jwt
+
+from urllib.parse import urlparse
+from datetime import datetime, timedelta
+from flask import Blueprint, jsonify, request, make_response
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
 # import asyncio
+
+from app.utils.crypto import generate_secret
 
 application_bp = Blueprint("application", __name__)
 # bot = get_bot()
@@ -64,8 +70,6 @@ def first_part():
     try:
         form_data = request.json.get("answers", [])
 
-        print(form_data)
-
         name = email = phone_number = high_school_stage = city = national_id = (
             introduction
         ) = None
@@ -115,6 +119,17 @@ def first_part():
             f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
         )
 
+        secret = generate_secret()
+        fixed_secret = secret + os.getenv("FIXED_JWT_SECRET")
+        encoded_jwt = jwt.encode(
+            {
+                "sub": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
+                "exp": datetime.now() + timedelta(minutes=15),
+            },
+            fixed_secret,
+            algorithm="HS256",
+        )
+
         form_response = {
             "uuid": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
             "name": name,
@@ -130,13 +145,32 @@ def first_part():
             "created_at": datetime.now().isoformat(),
         }
 
+        # save to database and send discord here
+
         # form_response.save()
         # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         # future.result()  # This will block until the coroutine finishes and raise exceptions if any
 
-        # save to database here
+        accept_url = urlparse(
+            scheme="http",  # Change to http for developing
+            netloc=os.getenv("HOST") + ":" + os.getenv("PORT"),
+            path="/redirect/check",
+            params=secret,
+        )
 
-        return jsonify({"status": "ok"})
+        print(accept_url)
+
+        # Stores JWT to cookie
+
+        response = make_response(jsonify({"status": "ok"}))
+        response.set_cookie(
+            "access_token",
+            encoded_jwt,
+            httponly=True,
+            secure=False,  # setting to false for development
+            samesite="Strict",
+        )
+        return response
     except Exception as e:
         print(e)
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -146,8 +180,6 @@ def first_part():
 def second_part():
     try:
         form_data = request.json.get("answers", [])
-
-        print(form_data)
 
         nickname, official_email = school = None
         emergency_contact = []
@@ -180,13 +212,25 @@ def second_part():
                 case field_mapping_two.get("IDCards"):
                     pass
 
-
         print("---------------------------------")
         print(
             f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact}, {studentcard}, {idcard}"
         )
 
         # update to database here
+
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        print(e)
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@application_bp.route("/testing", methods=["POST"])
+def testing():
+    try:
+        form_data = request.json.get("answers", [])
+
+        print(form_data)
 
         return jsonify({"status": "ok"})
     except Exception as e:
