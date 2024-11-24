@@ -134,13 +134,13 @@ def first_part():
             "real_name": name,
             "email": email,
             "official_email": "placeholder@staff.hackit.tw",  # we'll overwrite this later
-            "phone_number": phone_number,
+            "phone_number": "0" + phone_number[4:], # database required phone number without prefix
             "high_school_stage": high_school_stage,
             "city": city,
             "national_id": national_id,
             "introduction": introduction,
             "emergency_contact": [
-                {"name": "placeholder", "phone": "1234567890", "relationship": "close"}  # we'll overwrite this later as well
+                {"name": "np", "phone": "1234567890", "relationship": "close"}  # we'll overwrite this later as well
             ],
             "current_group": interested_fields[0],
             "permission_level": 1,
@@ -155,7 +155,6 @@ def first_part():
             headers=headers,
             json=form_response,
         )
-        print(os.getenv('AUTH_TOKEN'))
 
         if response.status_code != 200:
             raise Exception(response.text)
