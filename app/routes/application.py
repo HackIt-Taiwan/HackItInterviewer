@@ -150,11 +150,14 @@ def first_part():
         # save to database and send discord here
         headers = {"Authorization": "Bearer " + os.getenv("AUTH_TOKEN")}
 
-        requests.post(
+        response = requests.post(
             url=os.getenv("BACKEND_ENDPOINT") + "/staff/create/new",
             headers=headers,
             json=form_response,
         )
+
+        if response.status_code != 200:
+            print(response.text)
 
         # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         # future.result()  # This will block until the coroutine finishes and raise exceptions if any
