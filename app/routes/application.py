@@ -4,7 +4,7 @@ import jwt
 import requests
 # import asyncio
 
-# from urllib import urlparse
+from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, make_response
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
@@ -118,29 +118,34 @@ def first_part():
             f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
         )
 
-        # secret = generate_secret()
-        # fixed_secret = secret + os.getenv("FIXED_JWT_SECRET")
-        # encoded_jwt = jwt.encode(
-        #     {
-        #         "sub": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
-        #         "exp": datetime.now() + timedelta(minutes=15),
-        #     },
-        #     fixed_secret,
-        #     algorithm="HS256",
-        # )
+        secret = generate_secret()
+        fixed_secret = secret + os.getenv("FIXED_JWT_SECRET")
+        encoded_jwt = jwt.encode(
+            {
+                "sub": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
+                "exp": datetime.now() + timedelta(minutes=15),
+            },
+            fixed_secret,
+            algorithm="HS256",
+        )
 
         form_response = {
             "uuid": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
             "real_name": name,
             "email": email,
-            "official_email": "placeholder@staff.hackit.tw",  # we'll overwrite this later
-            "phone_number": "0" + phone_number[4:], # database required phone number without prefix
+            "official_email": "placeholder@hackit.tw",  # we'll overwrite this later
+            "phone_number": "0"
+            + phone_number[4:],  # database required phone number without prefix
             "high_school_stage": high_school_stage,
             "city": city,
             "national_id": national_id,
             "introduction": introduction,
             "emergency_contact": [
-                {"name": "np", "phone": "1234567890", "relationship": "close"}  # we'll overwrite this later as well
+                {
+                    "name": "np",
+                    "phone": "1234567890",
+                    "relationship": "close",
+                }  # we'll overwrite this later as well
             ],
             "current_group": interested_fields[0],
             "permission_level": 1,
@@ -162,25 +167,25 @@ def first_part():
         # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         # future.result()  # This will block until the coroutine finishes and raise exceptions if any
 
-        # accept_url = urlparse(
-        #     scheme="https",  # Change to http for developing
-        #     netloc=f"{os.getenv("HOST"")}:{os.getenv("PORT"),
-        #     path="/redirect/check",
-        #     params=secret,
-        # )
-        #
-        # print(accept_url)
+        accept_url = urlparse(
+            scheme="https",  # Change to http for developing
+            netloc=f"{os.getenv("HOST")}:{os.getenv("PORT")}",
+            path="/redirect/check",
+            params=secret,
+        )
+
+        print(accept_url)
 
         # Stores JWT to cookie
 
         response = make_response(jsonify({"status": "ok"}))
-        # response.set_cookie(
-        #     "access_token",
-        #     encoded_jwt,
-        #     httponly=True,
-        #     secure=True,  # setting to false for development
-        #     samesite="Strict",
-        # )
+        response.set_cookie(
+            "access_token",
+            encoded_jwt,
+            httponly=True,
+            secure=True,  # setting to false for development
+            samesite="Strict",
+        )
         return response
     except Exception as e:
         print(e)
