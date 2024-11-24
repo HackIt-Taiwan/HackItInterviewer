@@ -1,14 +1,16 @@
 # app/routes/application.py
 import os
 import jwt
+import requests
+# import asyncio
 
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, make_response
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
-# import asyncio
 
 from app.utils.crypto import generate_secret
+from app.utils.image import image_url_to_base64
 
 application_bp = Blueprint("application", __name__)
 # bot = get_bot()
@@ -21,7 +23,7 @@ field_mapping = {
     "Phone": "y8oWYKyZ4rNr",
     "HighSchoolStage": "LGZHt3lgqE9K",
     "City": "XoVZX9MD8Z3N",
-    "NationalID": "",
+    "NationalID": "sDE4W8PgEM3J",
     "InterestedFields": "bent6BusJh3O",
     "Introduction": "3wO2nn8p6kQ7",
     # "是否同意我們蒐集並使用您的資料（簽名）": "2Etw3QvT5GT8",
@@ -50,19 +52,17 @@ interested_fields_mapping = {
 
 # Stage two
 field_mapping_two = {
-    "Nickname": "",
-    "OfficialEmail": "",
-    "SchoolName": "",
-    "EmergencyContacts": "",
-    "StudendIDs": "",
-    "IDCards": "",
+    "Nickname": "JBFg5bcpbBFX",
+    "OfficialEmail": "BhIZEM4DEKIv",
+    "SchoolName": "GirzXOm97pqz",
+    "EmergencyContactName": "aOycU3YWHsnb",
+    "EmergencyContactPhone": "K3XwYXb9QKLh",
+    "EmergencyContactRelationship": "nUeuGr9JXoeA",
+    "StudentIDFront": "IEx5shdcXeud",
+    "StudentIDBack": "QMmN5JoVFw9v",
+    "IDCardFront": "1D6dprnfcU72",
+    "IDCardBack": "QtDXmmGPVwcr",
 }
-
-emergency_contact_mapping = {"test1": "名子", "test2": "關係", "test3": "手機號碼"}
-
-student_card_mapping = {"test2": "正面", "test1": "反面"}
-
-identification_card_mapping = {"test2": "正面", "test1": "反面"}
 
 
 @application_bp.route("/first_part_application", methods=["POST"])
@@ -146,30 +146,32 @@ def first_part():
         }
 
         # save to database and send discord here
+        headers = {"Authorization": "Bearer " + os.getenv("AUTH_TOKEN")}
 
-        # form_response.save()
+        requests.post(url=os.getenv("BACKEND_ENDPOINT") + "/staff/create/new", headers=headers, json=form_response)
+
         # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         # future.result()  # This will block until the coroutine finishes and raise exceptions if any
 
-        accept_url = urlparse(
-            scheme="http",  # Change to http for developing
-            netloc=os.getenv("HOST") + ":" + os.getenv("PORT"),
-            path="/redirect/check",
-            params=secret,
-        )
-
-        print(accept_url)
+        # accept_url = urlparse(
+        #     scheme="https",  # Change to http for developing
+        #     netloc=os.getenv("HOST") + ":" + os.getenv("PORT"),
+        #     path="/redirect/check",
+        #     params=secret,
+        # )
+        #
+        # print(accept_url)
 
         # Stores JWT to cookie
 
         response = make_response(jsonify({"status": "ok"}))
-        response.set_cookie(
-            "access_token",
-            encoded_jwt,
-            httponly=True,
-            secure=False,  # setting to false for development
-            samesite="Strict",
-        )
+        # response.set_cookie(
+        #     "access_token",
+        #     encoded_jwt,
+        #     httponly=True,
+        #     secure=True,  # setting to false for development
+        #     samesite="Strict",
+        # )
         return response
     except Exception as e:
         print(e)
@@ -181,10 +183,11 @@ def second_part():
     try:
         form_data = request.json.get("answers", [])
 
-        nickname, official_email = school = None
-        emergency_contact = []
-        studentcard = []
-        idcard = []
+        nickname = official_email = school = emergency_contact_name = (
+            emergency_contact_phone
+        ) = emergency_contact_relationship = studentidfront = studentidback = (
+            idcard_front
+        ) = idcard_back = None
 
         for answer in form_data:
             field_id = answer.get("id")
@@ -197,24 +200,40 @@ def second_part():
                     official_email = field_value
                 case field_mapping_two.get("SchoolName"):
                     school = field_value
-                case field_mapping_two.get("EmergencyContacts"):
-                    emergency_field_ids = (
-                        field_value.get("value", [])
-                        if isinstance(field_value, dict)
-                        else []
-                    )
-                    emergency_contact = [
-                        emergency_contact_mapping.get(field_id, field_id)
-                        for field_id in emergency_field_ids
-                    ]
-                case field_mapping_two.get("StudendIDs"):
-                    pass
-                case field_mapping_two.get("IDCards"):
-                    pass
+                case field_mapping_two.get("EmergencyContactName"):
+                    emergency_contact_name = field_value
+                case field_mapping_two.get("EmergencyContactPhone"):
+                    emergency_contact_phone = field_value
+                case field_mapping_two.get("EmergencyContactRelationship"):
+                    emergency_contact_relationship = field_value
+                case field_mapping_two.get("StudentIDFront"):
+                    url = field_value.get("url")
+
+                    studentidfront = image_url_to_base64(url)
+                    if not studentidfront:
+                        raise Exception("Bad image")
+                case field_mapping_two.get("StudentIDBack"):
+                    url = field_value.get("url")
+
+                    studentidback = image_url_to_base64(url)
+                    if not studentidfront:
+                        raise Exception("Bad image")
+                case field_mapping_two.get("IDCardFront"):
+                    url = field_value.get("url")
+
+                    idcard_front = image_url_to_base64(url)
+                    if not studentidfront:
+                        raise Exception("Bad image")
+                case field_mapping_two.get("IDCardBack"):
+                    url = field_value.get("url")
+
+                    idcard_back = image_url_to_base64(url)
+                    if not studentidfront:
+                        raise Exception("Bad image")
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact}, {studentcard}, {idcard}"
+            f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact_name}, {studentidfront}, {idcard_front}"
         )
 
         # update to database here
