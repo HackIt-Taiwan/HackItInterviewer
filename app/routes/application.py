@@ -4,6 +4,7 @@ import jwt
 import requests
 # import asyncio
 
+from urllib import urlparse
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, make_response
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
@@ -130,7 +131,7 @@ def first_part():
 
         form_response = {
             "uuid": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
-            "name": name,
+            "real_name": name,
             "email": email,
             "official_email": "placeholder@staff.hackit.tw",  # we'll overwrite this later
             "phone_number": phone_number,
@@ -138,9 +139,12 @@ def first_part():
             "city": city,
             "national_id": national_id,
             "introduction": introduction,
+            "emergency_contact": [
+                {"name": "placeholder", "phone": "1234567890", "relationship": "close"}
+            ],  # we'll overwrite this later as well
             "current_group": interested_fields[0],
             "permission_level": 1,
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
         }
 
         # save to database and send discord here
