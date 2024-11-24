@@ -1,7 +1,4 @@
-Flask
-flask_mailman
-python-dotenv
-pycryptodome
-discord
-discord.py
-Jinja2
+Flask==3.1.0
+flask_mailman==1.1.1
+PyJWT==2.10.0
+python-dotenv==1.0.1
