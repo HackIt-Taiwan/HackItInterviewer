@@ -148,23 +148,23 @@ def first_part():
         }
 
         # save to database and send discord here
-        headers = {"Authorization": "Bearer " + os.getenv("AUTH_TOKEN")}
+        headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
 
         response = requests.post(
-            url=os.getenv("BACKEND_ENDPOINT") + "/staff/create/new",
+            url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/create/new",
             headers=headers,
             json=form_response,
         )
 
         if response.status_code != 200:
-            print(response.text)
+            raise Exception("response.text")
 
         # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         # future.result()  # This will block until the coroutine finishes and raise exceptions if any
 
         # accept_url = urlparse(
         #     scheme="https",  # Change to http for developing
-        #     netloc=os.getenv("HOST") + ":" + os.getenv("PORT"),
+        #     netloc=f"{os.getenv("HOST"")}:{os.getenv("PORT"),
         #     path="/redirect/check",
         #     params=secret,
         # )
