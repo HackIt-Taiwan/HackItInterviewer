@@ -64,6 +64,8 @@ def first_part():
     try:
         form_data = request.json.get("answers", [])
 
+        print(form_data)
+
         name = email = phone_number = high_school_stage = city = national_id = (
             introduction
         ) = None
@@ -144,6 +146,8 @@ def first_part():
 def second_part():
     try:
         form_data = request.json.get("answers", [])
+
+        print(form_data)
 
         nickname, official_email = school = None
         emergency_contact = []
