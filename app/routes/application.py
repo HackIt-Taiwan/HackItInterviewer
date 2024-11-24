@@ -1,24 +1,24 @@
-# app/routes/webhook.py
+# app/routes/application.py
+from datetime import datetime
 from flask import Blueprint, jsonify, request
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
 # import asyncio
 
-# from app.utils.mail_sender import send_email
-
 application_bp = Blueprint("application", __name__)
 # bot = get_bot()
 
-# TODO: should not use hardcoded values
+# TODO: should not use hardcoded values, move them to env
+# Stage one
 field_mapping = {
-    "XLAq7Uwzn4Ep": "你的名字",
-    "TuQZE7sL16sM": "電子郵件",
-    "y8oWYKyZ4rNr": "電話號碼",
-    "LGZHt3lgqE9K": "高中階段",
-    "XoVZX9MD8Z3N": "你住在哪",
-    "bent6BusJh3O": "來找找適合你的領域",
-    "3wO2nn8p6kQ7": "為什麼想加入",
-    "AJacPbdzNn57": "有什麼相關經驗或技能嗎",
-    # "2Etw3QvT5GT8": "是否同意我們蒐集並使用您的資料（簽名）",
+    "Name": "XLAq7Uwzn4Ep",
+    "Email": "TuQZE7sL16sM",
+    "Phone": "y8oWYKyZ4rNr",
+    "HighSchoolStage": "LGZHt3lgqE9K",
+    "City": "XoVZX9MD8Z3N",
+    "NationalID": "",
+    "InterestedFields": "bent6BusJh3O",
+    "Introduction": "3wO2nn8p6kQ7",
+    # "是否同意我們蒐集並使用您的資料（簽名）": "2Etw3QvT5GT8",
 }
 
 high_school_stage_mapping = {
@@ -42,16 +42,30 @@ interested_fields_mapping = {
     "ltGHHif19TKf": "其他",
 }
 
-anti = []
+# Stage two
+field_mapping_two = {
+    "Nickname": "",
+    "OfficialEmail": "",
+    "SchoolName": "",
+    "EmergencyContacts": "",
+    "StudendIDs": "",
+    "IDCards": "",
+}
+
+emergency_contact_mapping = {"test1": "名子", "test2": "關係", "test3": "手機號碼"}
+
+student_card_mapping = {"test2": "正面", "test1": "反面"}
+
+identification_card_mapping = {"test2": "正面", "test1": "反面"}
 
 
 @application_bp.route("/first_part_application", methods=["POST"])
-def webhook():
+def first_part():
     try:
         form_data = request.json.get("answers", [])
 
-        name = email = phone_number = high_school_stage = city = reason = (
-            related_experience
+        name = email = phone_number = high_school_stage = city = national_id = (
+            introduction
         ) = None
         interested_fields = []
 
@@ -61,21 +75,23 @@ def webhook():
             field_value = answer.get("value")
 
             match field_id:
-                case "XLAq7Uwzn4Ep":  # name
+                case field_mapping.get("Name"):  # name
                     name = field_value
-                case "TuQZE7sL16sM":  # email
+                case field_mapping.get("Email"):
                     email = field_value
-                case "y8oWYKyZ4rNr":  # phone number
+                case field_mapping.get("Phone"):
                     phone_number = field_value
-                case "LGZHt3lgqE9K":  # high school stage
+                case field_mapping.get("HighSchoolStage"):
                     if isinstance(field_value, dict):
                         stage_id = field_value.get("value", [None])[0]
                         high_school_stage = high_school_stage_mapping.get(
                             stage_id, stage_id
                         )
-                case "XoVZX9MD8Z3N":  # city
+                case field_mapping.get("City"):
                     city = field_value
-                case "bent6BusJh3O":  # interested fields
+                case field_mapping.get("NationalID"):
+                    national_id = field_value
+                case field_mapping.get("InterestedFields"):
                     interested_field_ids = (
                         field_value.get("value", [])
                         if isinstance(field_value, dict)
@@ -85,10 +101,8 @@ def webhook():
                         interested_fields_mapping.get(field_id, field_id)
                         for field_id in interested_field_ids
                     ]
-                case "3wO2nn8p6kQ7":  # reason for choice
-                    reason = field_value
-                case "AJacPbdzNn57":  # related experience
-                    related_experience = field_value
+                case field_mapping.get("Introduction"):
+                    introduction = field_value
 
         # Replace this with backend_endpoint api
         # email_hash = hash_data(email)
@@ -96,33 +110,29 @@ def webhook():
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {interested_fields}, {reason}, {related_experience}"
+            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
         )
 
-        # form_response = FormResponse(
-        #     name=name,
-        #     email=email,
-        #     phone_number=phone_number,
-        #     high_school_stage=high_school_stage,
-        #     city=city,
-        #     interested_fields=interested_fields,
-        #     preferred_order=preferred_order,
-        #     reason_for_choice=reason_for_choice,
-        #     related_experience=related_experience,
-        #     signature_url=signature_url,
-        # )
-        #
+        form_response = {
+            "uuid": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
+            "name": name,
+            "email": email,
+            "official_email": "placeholder@staff.hackit.tw",  # we'll overwrite this later
+            "phone_number": phone_number,
+            "high_school_stage": high_school_stage,
+            "city": city,
+            "national_id": national_id,
+            "introduction": introduction,
+            "current_group": interested_fields[0],
+            "permission_level": 1,
+            "created_at": datetime.now().isoformat(),
+        }
+
         # form_response.save()
         # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
         # future.result()  # This will block until the coroutine finishes and raise exceptions if any
 
-        # send_email(
-        #     subject="Counterspell / 已收到您的工作人員報名表！",
-        #     recipient=email,
-        #     template='emails/notification_email.html',
-        #     name=name,
-        #     uuid=form_response.uuid
-        # )
+        # save to database here
 
         return jsonify({"status": "ok"})
     except Exception as e:
@@ -130,6 +140,51 @@ def webhook():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-@application_bp.route("/")
-def testing():
-    return "itworks"
+@application_bp.route("/second_part_application", methods=["POST"])
+def second_part():
+    try:
+        form_data = request.json.get("answers", [])
+
+        nickname, official_email = school = None
+        emergency_contact = []
+        studentcard = []
+        idcard = []
+
+        for answer in form_data:
+            field_id = answer.get("id")
+            field_value = answer.get("value")
+
+            match field_id:
+                case field_mapping_two.get("Nickname"):
+                    nickname = field_value
+                case field_mapping_two.get("OfficialEmail"):
+                    official_email = field_value
+                case field_mapping_two.get("SchoolName"):
+                    school = field_value
+                case field_mapping_two.get("EmergencyContacts"):
+                    emergency_field_ids = (
+                        field_value.get("value", [])
+                        if isinstance(field_value, dict)
+                        else []
+                    )
+                    emergency_contact = [
+                        emergency_contact_mapping.get(field_id, field_id)
+                        for field_id in emergency_field_ids
+                    ]
+                case field_mapping_two.get("StudendIDs"):
+                    pass
+                case field_mapping_two.get("IDCards"):
+                    pass
+
+
+        print("---------------------------------")
+        print(
+            f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact}, {studentcard}, {idcard}"
+        )
+
+        # update to database here
+
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        print(e)
+        return jsonify({"status": "error", "message": str(e)}), 500
