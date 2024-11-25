@@ -234,7 +234,7 @@ def second_part():
 @application_bp.route("/testing", methods=["POST"])
 def testing():
     try:
-        form_data = request.json.get("answers")
+        form_data = request.json.get("hiddenFields")
 
         print(form_data)
 
