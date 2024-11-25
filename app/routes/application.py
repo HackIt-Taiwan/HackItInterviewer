@@ -4,7 +4,6 @@ import jwt
 import requests
 # import asyncio
 
-from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, make_response
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
@@ -150,13 +149,15 @@ def first_part():
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
 
-        accept_url = urlparse(
-            scheme="https",  # Change to http for developing
-            # netloc=f"{os.getenv("HOST")}:{os.getenv("PORT")}",
-            netloc="https://interviewer-dev.vercel.app",
-            path="/redirect/check",
-            params=secret,
-        )
+        # Generate redirect url
+
+        host = os.getenv("HOST")
+        port = os.getenv("PORT")
+        scheme = "https"
+        path = "/redirect/check"
+
+        netloc = f"{host}:{port}" if host and port else "interviewer-dev.vercel.app"
+        accept_url = f"{scheme}://{netloc}{path}?secret={secret}"
 
         print(accept_url)
 
