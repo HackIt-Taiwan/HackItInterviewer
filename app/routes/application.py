@@ -169,7 +169,6 @@ def first_part():
 def second_part():
     try:
         form_data = request.json.get("answers", [])
-        secret = request.args.get("secret")
 
         nickname = official_email = school = emergency_contact_name = (
             emergency_contact_phone
@@ -196,33 +195,25 @@ def second_part():
             elif field_id == field_mapping_two.get("EmergencyContactRelationship"):
                 emergency_contact_relationship = field_value
             elif field_id == field_mapping_two.get("StudentIDFront"):
-                url = field_value.get("url")
-                print(url)
-                # studentidfront = image_url_to_base64(url)
-                # if not studentidfront:
-                #     return jsonify({"status": "error", "message": "Bad request"}), 400
+                studentidfront = image_url_to_base64(field_value.get("url"))
+                if not studentidfront:
+                    return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("StudentIDBack"):
-                url = field_value.get("url")
-                print(url)
-                # studentidback = image_url_to_base64(url)
-                # if not studentidfront:
-                #     return jsonify({"status": "error", "message": "Bad request"}), 400
+                studentidback = image_url_to_base64(field_value.get("url"))
+                if not studentidfront:
+                    return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("IDCardFront"):
-                url = field_value.get("url")
-                print(url)
-                # idcard_front = image_url_to_base64(url)
-                # if not studentidfront:
-                #     return jsonify({"status": "error", "message": "Bad request"}), 400
+                idcard_front = image_url_to_base64(field_value.get("url"))
+                if not studentidfront:
+                    return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("IDCardBack"):
-                url = field_value.get("url")
-                print(url)
-                # idcard_back = image_url_to_base64(url)
-                # if not studentidfront:
-                #     return jsonify({"status": "error", "message": "Bad request"}), 400
+                idcard_back = image_url_to_base64(field_value.get("url"))
+                if not studentidfront:
+                    return jsonify({"status": "error", "message": "Bad request"}), 400
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact_name}, {studentidfront}, {idcard_front}"
+            f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact_name}, {emergency_contact_name2}"
         )
 
         is_valid, uuid = parse_token(secret)
@@ -243,7 +234,7 @@ def second_part():
 @application_bp.route("/testing", methods=["POST"])
 def testing():
     try:
-        form_data = request.json.get("answers", [])
+        form_data = request.json.get()
 
         print(form_data)
 
