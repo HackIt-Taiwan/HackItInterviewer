@@ -173,8 +173,6 @@ def second_part():
         form_data = request.json.get("answers", [])
         hidden_values = request.json.get("hiddenFields", [])
 
-        print(hidden_values)
-
         nickname = official_email = school = emergency_contact_name = (
             emergency_contact_phone
         ) = emergency_contact_relationship = emergency_contact_name2 = (
@@ -231,14 +229,14 @@ def second_part():
         if not token:
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
-        is_valid, uuid = parse_token(hidden_values[0].get("value"))
+        is_valid, uuid = parse_token(token)
 
         if not is_valid or uuid == "":
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
         # update to database here
 
-        print(parse_token(hidden_values.get("value")), uuid)
+        print(token, uuid)
 
         return jsonify({"status": "ok"})
     except Exception as e:
