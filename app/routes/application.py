@@ -109,10 +109,6 @@ def first_part():
             elif field_id == field_mapping.get("Introduction"):
                 introduction = field_value
 
-        # Replace this with backend_endpoint api
-        # email_hash = hash_data(email)
-        # is_duplicate = FormResponse.objects(email_hash=email_hash).first() is not None
-
         print("---------------------------------")
         print(
             f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
@@ -169,7 +165,8 @@ def first_part():
 
         accept_url = urlparse(
             scheme="https",  # Change to http for developing
-            netloc=f"{os.getenv("HOST")}:{os.getenv("PORT")}",
+            # netloc=f"{os.getenv("HOST")}:{os.getenv("PORT")}",
+            netloc="https://interviewer-dev.vercel.app",
             path="/redirect/check",
             params=secret,
         )

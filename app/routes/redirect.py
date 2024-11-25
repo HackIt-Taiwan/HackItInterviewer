@@ -1,5 +1,6 @@
 # app/routes/redirect.py
 import os
+import requests
 from flask import Blueprint, jsonify, request, redirect
 
 from app.utils.crypto import parse_token
@@ -15,7 +16,18 @@ def redirect_check():
         is_valid, uuid = parse_token(token, secret)
         if not is_valid:
             return jsonify({"status": "error", "message": "Bad Request"}), 400
-        # check for uuid in database here
+
+        uuid_json = {"uuid": uuid}
+        headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
+
+        response = requests.post(
+            url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/getstaffs",
+            headers=headers,
+            json=uuid_json,
+        )
+        if response.status_code != 200:
+            return jsonify({"status": "error", "message": "Bad Request"}), 400
+
         return redirect(os.getenv("NEXT_FORM_URL"), code=302)
     except Exception as e:
         print(e)
