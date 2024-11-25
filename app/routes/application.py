@@ -173,7 +173,9 @@ def second_part():
 
         nickname = official_email = school = emergency_contact_name = (
             emergency_contact_phone
-        ) = emergency_contact_relationship = studentidfront = studentidback = (
+        ) = emergency_contact_relationship = emergency_contact_name2 = (
+            emergency_contact_phone2
+        ) = emergency_contact_relationship2 = studentidfront = studentidback = (
             idcard_front
         ) = idcard_back = None
 
@@ -197,23 +199,22 @@ def second_part():
                 url = field_value.get("url")
                 studentidfront = image_url_to_base64(url)
                 if not studentidfront:
-                    raise Exception("Bad image")
+                    return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("StudentIDBack"):
                 url = field_value.get("url")
                 studentidback = image_url_to_base64(url)
                 if not studentidfront:
-                    raise Exception("Bad image")
+                    return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("IDCardFront"):
                 url = field_value.get("url")
                 idcard_front = image_url_to_base64(url)
                 if not studentidfront:
-                    raise Exception("Bad image")
+                    return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("IDCardBack"):
                 url = field_value.get("url")
                 idcard_back = image_url_to_base64(url)
                 if not studentidfront:
-                    raise Exception("Bad image")
-
+                    return jsonify({"status": "error", "message": "Bad request"}), 400
 
         print("---------------------------------")
         print(
