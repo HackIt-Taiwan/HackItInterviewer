@@ -56,6 +56,9 @@ field_mapping_two = {
     "EmergencyContactName": "aOycU3YWHsnb",
     "EmergencyContactPhone": "K3XwYXb9QKLh",
     "EmergencyContactRelationship": "nUeuGr9JXoeA",
+    "EmergencyContactName2": "test",
+    "EmergencyContactPhone2": "test",
+    "EmergencyContactRelationship2": "test",
     "StudentIDFront": "IEx5shdcXeud",
     "StudentIDBack": "QMmN5JoVFw9v",
     "IDCardFront": "1D6dprnfcU72",
@@ -197,6 +200,12 @@ def second_part():
                 emergency_contact_phone = field_value
             elif field_id == field_mapping_two.get("EmergencyContactRelationship"):
                 emergency_contact_relationship = field_value
+            elif field_id == field_mapping_two.get("EmergencyContactName2"):
+                emergency_contact_name2 = field_value
+            elif field_id == field_mapping_two.get("EmergencyContactPhone2"):
+                emergency_contact_phone2 = field_value
+            elif field_id == field_mapping_two.get("EmergencyContactRelationship2"):
+                emergency_contact_relationship2 = field_value
             elif field_id == field_mapping_two.get("StudentIDFront"):
                 studentidfront = image_url_to_base64(field_value.get("url"))
                 if not studentidfront:
