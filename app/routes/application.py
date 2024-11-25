@@ -226,6 +226,8 @@ def second_part():
             f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact_name}, {emergency_contact_name2}"
         )
 
+        headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
+
         if not token:
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
@@ -234,9 +236,46 @@ def second_part():
         if not is_valid or uuid == "":
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
-        # update to database here
+        # Saves to database
 
-        print(token, uuid)
+        form_response = {
+            "nickname": nickname,
+            "official_email": official_email,
+            "school": school,
+            "student_card": [
+                {
+                    "front": studentidfront,
+                    "back": studentidback,
+                }
+            ],
+            "id_card": [
+                {
+                    "front": idcard_front,
+                    "back": idcard_back,
+                }
+            ],
+            "emergency_contact": [
+                {
+                    "name": emergency_contact_name,
+                    "phone": emergency_contact_phone,
+                    "relationship": emergency_contact_relationship,
+                },
+                {
+                    "name": emergency_contact_name2,
+                    "phone": emergency_contact_phone2,
+                    "relationship": emergency_contact_relationship2,
+                },
+            ],
+        }
+
+        response = requests.post(
+            url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/update/{uuid}",
+            headers=headers,
+            json=form_response,
+        )
+
+        if response.status_code != 200:
+            return jsonify({"status": "error", "message": "Bad request"}), 400
 
         return jsonify({"status": "ok"})
     except Exception as e:
@@ -247,10 +286,10 @@ def second_part():
 @application_bp.route("/testing", methods=["POST"])
 def testing():
     try:
-        form_data = request.json.get("hiddenFields")
-
+        form_data = request.json.get("hiddenFields", [])
         print(form_data)
-
+        form_data = request.json.get("answers", [])
+        print(form_data)
         return jsonify({"status": "ok"})
     except Exception as e:
         print(e)

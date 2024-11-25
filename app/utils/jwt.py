@@ -26,7 +26,7 @@ def parse_token(token):
     try:
         payload = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
         return True, payload["sub"]
-    except jwt.ExpiredSignatureError:
-        return False, ""
+    # except jwt.ExpiredSignatureError: for developing CHANGE THIS BACk
+    #     return False, ""
     except jwt.InvalidTokenError:
         return False, ""
