@@ -173,6 +173,8 @@ def second_part():
         form_data = request.json.get("answers", [])
         hidden_values = request.json.get("hiddenFields", [])
 
+        print(hidden_values)
+
         nickname = official_email = school = emergency_contact_name = (
             emergency_contact_phone
         ) = emergency_contact_relationship = emergency_contact_name2 = (
