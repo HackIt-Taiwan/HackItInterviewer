@@ -148,20 +148,7 @@ def first_part():
             "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
         }
 
-        # save to database and send discord here
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
-
-        response = requests.post(
-            url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/create/new",
-            headers=headers,
-            json=form_response,
-        )
-
-        if response.status_code != 200:
-            raise Exception(response.text)
-
-        # future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
-        # future.result()  # This will block until the coroutine finishes and raise exceptions if any
 
         accept_url = urlparse(
             scheme="https",  # Change to http for developing
@@ -175,7 +162,7 @@ def first_part():
 
         # Stores JWT to cookie
 
-        response = make_response(jsonify({"status": "ok"}))
+        response = make_response(jsonify({"status": "ok"}), 200)
         response.set_cookie(
             "access_token",
             encoded_jwt,
@@ -183,6 +170,20 @@ def first_part():
             secure=True,  # setting to false for development
             samesite="Strict",
         )
+
+        # Saves to database
+
+        response = requests.post(
+            url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/create/new",
+            headers=headers,
+            json=form_response,
+        )
+
+        if response.status_code != 200:
+            raise Exception(response.text)
+
+        # Sends to discord
+
         return response
     except Exception as e:
         print(e)
