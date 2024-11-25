@@ -143,7 +143,7 @@ def first_part():
 
         # Generate redirect url
 
-        accept_url = f"{os.getenv("NEXT_FORM_URL")}?{str(secret)}"
+        accept_url = f"{os.getenv("NEXT_FORM_URL")}?{secret}"
         print(accept_url)
 
         # Saves to database
