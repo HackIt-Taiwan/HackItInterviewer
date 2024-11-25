@@ -1,5 +1,6 @@
 # app/routes/application.py
 import os
+import uuid
 import requests
 # import asyncio
 
@@ -117,12 +118,12 @@ def first_part():
             f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
         )
 
-        secret = generate_jwt_token(
-            "79140886-47e3-4e20-8e98-7dfec71bdd65"
-        )  # change this later
+        user_uuid = str(uuid.uuid4())
+
+        secret = generate_jwt_token(user_uuid)
 
         form_response = {
-            "uuid": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
+            "uuid": user_uuid,  # change this later
             "real_name": name,
             "email": email,
             "official_email": "placeholder@hackit.tw",  # we'll overwrite this later
@@ -197,13 +198,13 @@ def second_part():
             elif field_id == field_mapping_two.get("EmergencyContactName"):
                 emergency_contact_name = field_value
             elif field_id == field_mapping_two.get("EmergencyContactPhone"):
-                emergency_contact_phone = field_value
+                emergency_contact_phone = "0" + field_value[4:]
             elif field_id == field_mapping_two.get("EmergencyContactRelationship"):
                 emergency_contact_relationship = field_value
             elif field_id == field_mapping_two.get("EmergencyContactName2"):
                 emergency_contact_name2 = field_value
             elif field_id == field_mapping_two.get("EmergencyContactPhone2"):
-                emergency_contact_phone2 = field_value
+                emergency_contact_phone2 = "0" + field_value[4:]
             elif field_id == field_mapping_two.get("EmergencyContactRelationship2"):
                 emergency_contact_relationship2 = field_value
             elif field_id == field_mapping_two.get("StudentIDFront"):
