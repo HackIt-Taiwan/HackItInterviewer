@@ -229,6 +229,8 @@ def second_part():
         if not token:
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
+        print(token)
+
         is_valid, uuid = parse_token(token)
 
         if not is_valid or uuid == "":
