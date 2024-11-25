@@ -1,14 +1,13 @@
 # app/routes/application.py
 import os
-import jwt
 import requests
 # import asyncio
 
-from datetime import datetime, timedelta
-from flask import Blueprint, jsonify, request, make_response
+from datetime import datetime
+from flask import Blueprint, jsonify, request
 # from app.discord.application_process.helpers import send_initial_embed, get_bot
 
-from app.utils.crypto import generate_secret
+from app.utils.jwt import generate_jwt_token, parse_token
 from app.utils.image import image_url_to_base64
 
 application_bp = Blueprint("application", __name__)
@@ -113,16 +112,9 @@ def first_part():
             f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
         )
 
-        secret = generate_secret()
-        fixed_secret = secret + os.getenv("FIXED_JWT_SECRET")
-        encoded_jwt = jwt.encode(
-            {
-                "sub": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
-                "exp": datetime.now() + timedelta(minutes=15),
-            },
-            fixed_secret,
-            algorithm="HS256",
-        )
+        secret = generate_jwt_token(
+            "79140886-47e3-4e20-8e98-7dfec71bdd65"
+        )  # change this later
 
         form_response = {
             "uuid": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
@@ -151,26 +143,8 @@ def first_part():
 
         # Generate redirect url
 
-        host = os.getenv("HOST")
-        port = os.getenv("PORT")
-        scheme = "https"
-        path = "/redirect/check"
-
-        netloc = f"{host}:{port}" if host and port else "interviewer-dev.vercel.app"
-        accept_url = f"{scheme}://{netloc}{path}?secret={secret}"
-
+        accept_url = f"{os.getenv("NEXT_FORM_URL")}?{secret}"
         print(accept_url)
-
-        # Stores JWT to cookie
-
-        response = make_response(jsonify({"status": "ok"}), 200)
-        response.set_cookie(
-            "access_token",
-            encoded_jwt,
-            httponly=True,
-            secure=True,  # setting to false for development
-            samesite="Strict",
-        )
 
         # Saves to database
 
@@ -181,11 +155,11 @@ def first_part():
         )
 
         if response.status_code != 200:
-            raise Exception(response.text)
+            return jsonify({"status": "error", "message": "Bad request"}), 400
 
         # Sends to discord
 
-        return response
+        return jsonify({"status": "ok"}), 200
     except Exception as e:
         print(e)
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -195,6 +169,7 @@ def first_part():
 def second_part():
     try:
         form_data = request.json.get("answers", [])
+        secret = request.args.get("secret")
 
         nickname = official_email = school = emergency_contact_name = (
             emergency_contact_phone
@@ -249,7 +224,14 @@ def second_part():
             f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact_name}, {studentidfront}, {idcard_front}"
         )
 
+        is_valid, uuid = parse_token(secret)
+
+        if not is_valid or uuid == "":
+            return jsonify({"status": "error", "message": "Bad request"}), 400
+
         # update to database here
+
+        print(secret, uuid)
 
         return jsonify({"status": "ok"})
     except Exception as e:

@@ -29,7 +29,6 @@ def create_app():
     # app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 
     # Here to load blueprint
-    from app.routes.redirect import redirect_bp
     from app.routes.application import application_bp
     from app.routes.email_preview import email_preview_bp
 
@@ -39,6 +38,5 @@ def create_app():
     # Here to register blueprint
     app.register_blueprint(email_preview_bp, url_prefix="/admin/preview")
     app.register_blueprint(application_bp, url_prefix="/apply")
-    app.register_blueprint(redirect_bp, url_prefix="/redirect")
 
     return app
