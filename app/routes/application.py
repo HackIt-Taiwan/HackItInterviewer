@@ -217,7 +217,10 @@ def second_part():
             f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact_name}, {emergency_contact_name2}"
         )
 
-        is_valid, uuid = parse_token(hidden_values.get("value"))
+        if hidden_values == []:
+            return jsonify({"status": "error", "message": "Bad request"}), 400
+
+        is_valid, uuid = parse_token(hidden_values[0].get("value"))
 
         if not is_valid or uuid == "":
             return jsonify({"status": "error", "message": "Bad request"}), 400
