@@ -197,24 +197,28 @@ def second_part():
                 emergency_contact_relationship = field_value
             elif field_id == field_mapping_two.get("StudentIDFront"):
                 url = field_value.get("url")
-                studentidfront = image_url_to_base64(url)
-                if not studentidfront:
-                    return jsonify({"status": "error", "message": "Bad request"}), 400
+                print(url)
+                # studentidfront = image_url_to_base64(url)
+                # if not studentidfront:
+                #     return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("StudentIDBack"):
                 url = field_value.get("url")
-                studentidback = image_url_to_base64(url)
-                if not studentidfront:
-                    return jsonify({"status": "error", "message": "Bad request"}), 400
+                print(url)
+                # studentidback = image_url_to_base64(url)
+                # if not studentidfront:
+                #     return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("IDCardFront"):
                 url = field_value.get("url")
-                idcard_front = image_url_to_base64(url)
-                if not studentidfront:
-                    return jsonify({"status": "error", "message": "Bad request"}), 400
+                print(url)
+                # idcard_front = image_url_to_base64(url)
+                # if not studentidfront:
+                #     return jsonify({"status": "error", "message": "Bad request"}), 400
             elif field_id == field_mapping_two.get("IDCardBack"):
                 url = field_value.get("url")
-                idcard_back = image_url_to_base64(url)
-                if not studentidfront:
-                    return jsonify({"status": "error", "message": "Bad request"}), 400
+                print(url)
+                # idcard_back = image_url_to_base64(url)
+                # if not studentidfront:
+                #     return jsonify({"status": "error", "message": "Bad request"}), 400
 
         print("---------------------------------")
         print(
