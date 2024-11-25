@@ -143,7 +143,7 @@ def first_part():
 
         # Generate redirect url
 
-        accept_url = f"{os.getenv("NEXT_FORM_URL")}?{secret}"
+        accept_url = f"{os.getenv("NEXT_FORM_URL")}?secret={secret}"
         print(accept_url)
 
         # Saves to database
@@ -181,43 +181,39 @@ def second_part():
             field_id = answer.get("id")
             field_value = answer.get("value")
 
-            match field_id:
-                case field_mapping_two.get("Nickname"):
-                    nickname = field_value
-                case field_mapping_two.get("OfficialEmail"):
-                    official_email = field_value
-                case field_mapping_two.get("SchoolName"):
-                    school = field_value
-                case field_mapping_two.get("EmergencyContactName"):
-                    emergency_contact_name = field_value
-                case field_mapping_two.get("EmergencyContactPhone"):
-                    emergency_contact_phone = field_value
-                case field_mapping_two.get("EmergencyContactRelationship"):
-                    emergency_contact_relationship = field_value
-                case field_mapping_two.get("StudentIDFront"):
-                    url = field_value.get("url")
+            if field_id == field_mapping_two.get("Nickname"):
+                nickname = field_value
+            elif field_id == field_mapping_two.get("OfficialEmail"):
+                official_email = field_value
+            elif field_id == field_mapping_two.get("SchoolName"):
+                school = field_value
+            elif field_id == field_mapping_two.get("EmergencyContactName"):
+                emergency_contact_name = field_value
+            elif field_id == field_mapping_two.get("EmergencyContactPhone"):
+                emergency_contact_phone = field_value
+            elif field_id == field_mapping_two.get("EmergencyContactRelationship"):
+                emergency_contact_relationship = field_value
+            elif field_id == field_mapping_two.get("StudentIDFront"):
+                url = field_value.get("url")
+                studentidfront = image_url_to_base64(url)
+                if not studentidfront:
+                    raise Exception("Bad image")
+            elif field_id == field_mapping_two.get("StudentIDBack"):
+                url = field_value.get("url")
+                studentidback = image_url_to_base64(url)
+                if not studentidfront:
+                    raise Exception("Bad image")
+            elif field_id == field_mapping_two.get("IDCardFront"):
+                url = field_value.get("url")
+                idcard_front = image_url_to_base64(url)
+                if not studentidfront:
+                    raise Exception("Bad image")
+            elif field_id == field_mapping_two.get("IDCardBack"):
+                url = field_value.get("url")
+                idcard_back = image_url_to_base64(url)
+                if not studentidfront:
+                    raise Exception("Bad image")
 
-                    studentidfront = image_url_to_base64(url)
-                    if not studentidfront:
-                        raise Exception("Bad image")
-                case field_mapping_two.get("StudentIDBack"):
-                    url = field_value.get("url")
-
-                    studentidback = image_url_to_base64(url)
-                    if not studentidfront:
-                        raise Exception("Bad image")
-                case field_mapping_two.get("IDCardFront"):
-                    url = field_value.get("url")
-
-                    idcard_front = image_url_to_base64(url)
-                    if not studentidfront:
-                        raise Exception("Bad image")
-                case field_mapping_two.get("IDCardBack"):
-                    url = field_value.get("url")
-
-                    idcard_back = image_url_to_base64(url)
-                    if not studentidfront:
-                        raise Exception("Bad image")
 
         print("---------------------------------")
         print(
