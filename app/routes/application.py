@@ -62,6 +62,8 @@ field_mapping_two = {
     "IDCardBack": "QtDXmmGPVwcr",
 }
 
+hidden_value_secret = "hUm24WLc"
+
 
 @application_bp.route("/first_part_application", methods=["POST"])
 def first_part():
@@ -177,7 +179,7 @@ def second_part():
             emergency_contact_phone2
         ) = emergency_contact_relationship2 = studentidfront = studentidback = (
             idcard_front
-        ) = idcard_back = None
+        ) = idcard_back = token = None
 
         for answer in form_data:
             field_id = answer.get("id")
@@ -212,12 +214,19 @@ def second_part():
                 if not studentidfront:
                     return jsonify({"status": "error", "message": "Bad request"}), 400
 
+        for data in hidden_values:
+            field_id = data.get("id")
+            field_value = data.get("value")
+
+            if field_id == hidden_value_secret:
+                token = field_value
+
         print("---------------------------------")
         print(
             f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact_name}, {emergency_contact_name2}"
         )
 
-        if hidden_values == []:
+        if not token:
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
         is_valid, uuid = parse_token(hidden_values[0].get("value"))
