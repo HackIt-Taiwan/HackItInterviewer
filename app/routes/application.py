@@ -112,9 +112,9 @@ def first_part():
             f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
         )
 
-        # secret = generate_jwt_token(
-        #     "79140886-47e3-4e20-8e98-7dfec71bdd65"
-        # )  # change this later
+        secret = generate_jwt_token(
+            "79140886-47e3-4e20-8e98-7dfec71bdd65"
+        )  # change this later
 
         form_response = {
             "uuid": "79140886-47e3-4e20-8e98-7dfec71bdd65",  # change this later
@@ -143,7 +143,7 @@ def first_part():
 
         # Generate redirect url
 
-        accept_url = f"{os.getenv("NEXT_FORM_URL")}?test"
+        accept_url = f"{os.getenv("NEXT_FORM_URL")}?{str(secret)}"
         print(accept_url)
 
         # Saves to database
