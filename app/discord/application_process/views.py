@@ -15,10 +15,10 @@ from .helpers import (
     APPLY_FORM_CHANNEL_ID,
     # send_stage_embed,
 )
-from .modals import (
+# from .modals import (
     # FailureReasonModal,
-    is_authorized,
-)
+    # is_authorized,
+# )
 
 
 class AcceptOrCancelView:
