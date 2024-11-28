@@ -16,10 +16,8 @@ from .helpers import (
     # send_stage_embed,
 )
 from .modals import (
-    FailureReasonModal,
-    ManagerFillInfoModal1,
+    # FailureReasonModal,
     is_authorized,
-    TransferToTeamView,
 )
 
 
@@ -99,8 +97,8 @@ class AcceptOrCancelView:
             return
 
         # Open modal to input cancellation reason
-        modal = FailureReasonModal(form_response, action="取消")
-        await interaction.response.send_modal(modal)
+        # modal = FailureReasonModal(form_response, action="取消")
+        # await interaction.response.send_modal(modal)
 
 
 # class InterviewResultView:
