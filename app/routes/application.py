@@ -1,18 +1,18 @@
 # app/routes/application.py
 import os
 import uuid
+import asyncio
 import requests
-# import asyncio
 
 from datetime import datetime
 from flask import Blueprint, jsonify, request
-# from app.discord.application_process.helpers import send_initial_embed, get_bot
+from app.discord.application_process.helpers import send_initial_embed, get_bot
 
 from app.utils.jwt import generate_jwt_token, parse_token
 from app.utils.image import image_url_to_base64
 
 application_bp = Blueprint("application", __name__)
-# bot = get_bot()
+bot = get_bot()
 
 # TODO: should not use hardcoded values, move them to env
 # Stage one
@@ -164,6 +164,9 @@ def first_part():
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
         # Sends to discord
+
+        future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
+        future.result()
 
         return jsonify({"status": "ok"}), 200
     except Exception as e:
