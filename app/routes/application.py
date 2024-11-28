@@ -123,7 +123,7 @@ def first_part():
         secret = generate_jwt_token(user_uuid)
 
         form_response = {
-            "uuid": user_uuid,  # change this later
+            "uuid": user_uuid,
             "real_name": name,
             "email": email,
             "official_email": "placeholder@hackit.tw",  # we'll overwrite this later

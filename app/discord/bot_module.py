@@ -1,15 +1,10 @@
 # app/discord/bot_module.py
-import asyncio
-import os
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from app.discord.application_process.helpers import send_initial_embed
-from app.discord.import_existing_members import setup as import_existing_members_setup
 from app.discord.application_process import setup as application_process_setup
-from app.models.form_response import FormResponse
 from app.utils.mail_sender import send_email
 
 intents = discord.Intents.default()
@@ -19,33 +14,23 @@ intents.members = True
 bot = commands.Bot(command_prefix="/", intents=intents)
 load_dotenv()
 
-import_existing_members_setup(bot)
 application_process_setup(bot)
+
 
 @bot.event
 async def on_ready():
-
     from app.discord.application_process.views import (
         AcceptOrCancelView,
-        ContactOrFailView,
-        ArrangeOrCancelView,
-        AttendOrNoShowView,
         InterviewResultView,
-        ManagerFillFormView,
-        FindMyView,
     )
 
     bot.add_view(AcceptOrCancelView())
-    bot.add_view(ContactOrFailView())
-    bot.add_view(ArrangeOrCancelView())
-    bot.add_view(AttendOrNoShowView())
     bot.add_view(InterviewResultView())
-    bot.add_view(ManagerFillFormView())
-    bot.add_view(FindMyView())
 
 
 def get_bot():
     return bot
+
 
 #
 # async def import_data():
@@ -86,3 +71,4 @@ def get_bot():
 #         )
 #
 #     print("資料匯入完成！")
+

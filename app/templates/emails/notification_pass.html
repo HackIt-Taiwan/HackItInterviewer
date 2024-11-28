@@ -86,7 +86,7 @@
             word-break: break-all;
         }
 
-        .guide-link {
+        .direct-link {
             font-size: 15px;
             color: #0066cc;
             text-decoration: none;
@@ -113,14 +113,14 @@
     <p>團員識別碼：</p>
     <p class="uuid">{{ uuid }}</p>
 
-    <p>請點擊以下按鈕來註冊您的 HackID：</p>
+    <p>請點擊以下按鈕來填寫第二部分的表單：</p>
     <div class="button">
-        <a href="https://hackid.hackit.tw/auth/login?uuid={{ uuid }}&email={{ email }}">註冊 ID</a>
+        <a href="{{ next_url }}">跳轉頁面</a>
     </div>
 
-    <p>為了協助您順利完成註冊，您可以觀看我們的<a href="https://go.hackit.tw/hackidtutorial" class="guide-link">操作教學影片</a>。</p>
+      <p>若上方按鈕無法使用，請瀏覽:</p>
+      <a href="{{ next_url }}" class="direct-link">{{ next_url }}</a>
 
-    <p>若有任何疑問，歡迎透過電子郵件聯繫我們：<a href="mailto:counterspell@hackit.tw">counterspell@hackit.tw</a></p>
 
     <div class="footer">
         <p>此為自動發送的郵件，請勿回覆。</p>
