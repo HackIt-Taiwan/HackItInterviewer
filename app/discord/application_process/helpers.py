@@ -73,6 +73,8 @@ async def send_initial_embed(form_response):
         print(f"Channel with ID {APPLY_FORM_CHANNEL_ID} not found.")
         return
 
+    await channel.send("Test message to verify bot functionality.")
+
     # Create the embed
     # if form_response.is_duplicate:
     #     embed = discord.Embed(

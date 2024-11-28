@@ -1,7 +1,7 @@
 # app/__init__.py
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 
 from dotenv import load_dotenv
 from flask_mailman import Mail
@@ -35,5 +35,11 @@ def create_app():
     # Here to register blueprint
     app.register_blueprint(email_preview_bp, url_prefix="/admin/preview")
     app.register_blueprint(application_bp, url_prefix="/apply")
+
+    # Don't mind about this
+    @app.errorhandler(404)
+    def page_not_found(e):
+        #snip
+        return render_template('404.html'), 404
 
     return app
