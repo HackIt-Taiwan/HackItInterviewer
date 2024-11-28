@@ -13,7 +13,7 @@ from .helpers import (
     get_bot,
     get_embed_color,
     APPLY_FORM_CHANNEL_ID,
-    send_stage_embed,
+    # send_stage_embed,
 )
 from .modals import (
     FailureReasonModal,
@@ -65,7 +65,7 @@ class AcceptOrCancelView:
             "已受理，進入下一階段。", ephemeral=True
         )
         await interaction.message.delete()
-        await send_stage_embed(form_response, interaction.user)
+        # await send_stage_embed(form_response, interaction.user)
 
     @discord.ui.button(
         label="取消",
