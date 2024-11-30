@@ -21,7 +21,6 @@ field_mapping = {
     "Phone": os.getenv("FIELD_PHONE"),
     "HighSchoolStage": os.getenv("FIELD_HIGH_SCHOOL_STAGE"),
     "City": os.getenv("FIELD_CITY"),
-    "NationalID": os.getenv("FIELD_NATIONAL_ID"),
     "InterestedFields": os.getenv("FIELD_INTERESTED_FIELDS"),
     "Introduction": os.getenv("FIELD_INTRODUCTION"),
 }
@@ -34,17 +33,11 @@ high_school_stage_mapping = {
 }
 
 interested_fields_mapping = {
-    os.getenv("INTERESTED_FIELD_1"): "策劃部",
-    os.getenv("INTERESTED_FIELD_2"): "設計部",
-    os.getenv("INTERESTED_FIELD_3"): "行政部",
-    os.getenv("INTERESTED_FIELD_4"): "公關組",
-    os.getenv("INTERESTED_FIELD_5"): "活動企劃組",
-    os.getenv("INTERESTED_FIELD_6"): "美術組",
-    os.getenv("INTERESTED_FIELD_7"): "資訊組",
-    os.getenv("INTERESTED_FIELD_8"): "影音組",
-    os.getenv("INTERESTED_FIELD_9"): "行政組",
-    os.getenv("INTERESTED_FIELD_10"): "財務組",
-    os.getenv("INTERESTED_FIELD_11"): "其他",
+    os.getenv("INTERESTED_FIELD_1"): "行政部",
+    os.getenv("INTERESTED_FIELD_2"): "公共事務部",
+    os.getenv("INTERESTED_FIELD_3"): "策劃部",
+    os.getenv("INTERESTED_FIELD_4"): "媒體影像部",
+    os.getenv("INTERESTED_FIELD_5"): "資訊科技部",
 }
 
 # Stage two
@@ -52,6 +45,7 @@ field_mapping_two = {
     "Nickname": os.getenv("FIELD_TWO_NICKNAME"),
     "OfficialEmail": os.getenv("FIELD_TWO_OFFICIAL_EMAIL"),
     "SchoolName": os.getenv("FIELD_TWO_SCHOOL_NAME"),
+    "NationalID": os.getenv("FIELD_TWO_NATIONAL_ID"),
     "EmergencyContactName": os.getenv("FIELD_TWO_EMERGENCY_CONTACT_NAME"),
     "EmergencyContactPhone": os.getenv("FIELD_TWO_EMERGENCY_CONTACT_PHONE"),
     "EmergencyContactRelationship": os.getenv(
@@ -100,8 +94,6 @@ def first_part():
                     )
             elif field_id == field_mapping.get("City"):
                 city = field_value
-            elif field_id == field_mapping.get("NationalID"):
-                national_id = field_value
             elif field_id == field_mapping.get("InterestedFields"):
                 interested_field_ids = (
                     field_value.get("value", [])
@@ -141,7 +133,7 @@ def first_part():
                 }  # we'll overwrite this later as well
             ],
             "current_group": interested_fields[0],
-            "permission_level": 1,
+            "permission_level": 0,
             "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
         }
 
@@ -195,6 +187,8 @@ def second_part():
                 official_email = field_value
             elif field_id == field_mapping_two.get("SchoolName"):
                 school = field_value
+            elif field_id == field_mapping_two.get("NationalID"):
+                national_id = field_value
             elif field_id == field_mapping_two.get("EmergencyContactName"):
                 emergency_contact_name = field_value
             elif field_id == field_mapping_two.get("EmergencyContactPhone"):
@@ -233,7 +227,7 @@ def second_part():
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {nickname}, {official_email}, {school}, {emergency_contact_name}, {emergency_contact_name2}"
+            f"Parsed form data: {nickname}, {official_email}, {school}, {national_id}, {emergency_contact_name}, {emergency_contact_name2}"
         )
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
@@ -252,6 +246,8 @@ def second_part():
             "nickname": nickname,
             "official_email": official_email,
             "school": school,
+            "national_id": national_id,
+            "permission_level": 6,
             "student_card": [
                 {
                     "front": studentidfront,
