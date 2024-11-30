@@ -1,23 +1,21 @@
 # app/__init__.py
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 
 from dotenv import load_dotenv
 from flask_mailman import Mail
-from jinja2.utils import urlize
-from mongoengine import connect
-from redis.commands.search.querystring import union
 
 app = Flask(__name__)
 mail = Mail()
+
 
 def create_app():
     global app
     load_dotenv()
 
     # App configuration
-    app.config['DEBUG'] = os.getenv('DEBUG') == 'True'
+    app.config["DEBUG"] = os.getenv("DEBUG") == "True"
 
     # Mail configuration
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
@@ -28,16 +26,20 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 
-    # Here to load blueprint
-    from app.routes.webhook import webhook_bp
-    from app.routes.email_preview import email_preview_bp
-
-    # Here to initialize the app
-    connect(host=os.getenv('MONGO_URI'))
     mail.init_app(app)
 
+    # Here to load blueprint
+    from app.routes.application import application_bp
+    from app.routes.email_preview import email_preview_bp
+
     # Here to register blueprint
-    app.register_blueprint(webhook_bp)
-    app.register_blueprint(email_preview_bp, url_prefix='/admin/preview')
+    app.register_blueprint(email_preview_bp, url_prefix="/admin/preview")
+    app.register_blueprint(application_bp, url_prefix="/apply")
+
+    # Don't mind about this
+    @app.errorhandler(404)
+    def page_not_found(e):
+        #snip
+        return render_template('404.html'), 404
 
     return app

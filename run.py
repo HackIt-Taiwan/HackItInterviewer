@@ -12,8 +12,8 @@ def run_discord_bot():
 
 
 if __name__ == "__main__":
-    t1 = threading.Thread(target=run_discord_bot)
-    t1.start()
+    bot_thread = threading.Thread(target=run_discord_bot)
+    bot_thread.start()
 
     host = os.getenv('HOST', '0.0.0.0')
     port = int(os.getenv('PORT', 80))

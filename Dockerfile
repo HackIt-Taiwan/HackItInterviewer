@@ -6,7 +6,7 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 80
+EXPOSE 3000
 ENV PYTHONUNBUFFERED=1
 
 CMD ["python", "run.py"]
