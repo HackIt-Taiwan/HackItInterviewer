@@ -26,7 +26,15 @@ def parse_token(token):
     try:
         payload = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
         return True, payload["sub"]
-    # except jwt.ExpiredSignatureError: for developing CHANGE THIS BACk
-    #     return False, ""
+    except jwt.ExpiredSignatureError:
+        return False, ""
     except jwt.InvalidTokenError:
         return False, ""
+
+
+def generate_next_url(uuid):
+    """Generate redirect url"""
+    secret = generate_jwt_token(uuid)
+    accept_url = f"{os.getenv("NEXT_FORM_URL")}?secret={secret}"
+
+    return accept_url

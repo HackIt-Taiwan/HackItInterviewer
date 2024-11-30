@@ -8,65 +8,67 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 from app.discord.application_process.helpers import send_initial_embed, get_bot
 
-from app.utils.jwt import generate_jwt_token, parse_token
+from app.utils.jwt import parse_token
 from app.utils.image import image_url_to_base64
 
 application_bp = Blueprint("application", __name__)
 bot = get_bot()
 
-# TODO: should not use hardcoded values, move them to env
 # Stage one
 field_mapping = {
-    "Name": "XLAq7Uwzn4Ep",
-    "Email": "TuQZE7sL16sM",
-    "Phone": "y8oWYKyZ4rNr",
-    "HighSchoolStage": "LGZHt3lgqE9K",
-    "City": "XoVZX9MD8Z3N",
-    "NationalID": "sDE4W8PgEM3J",
-    "InterestedFields": "bent6BusJh3O",
-    "Introduction": "3wO2nn8p6kQ7",
-    # "是否同意我們蒐集並使用您的資料（簽名）": "2Etw3QvT5GT8",
+    "Name": os.getenv("FIELD_NAME"),
+    "Email": os.getenv("FIELD_EMAIL"),
+    "Phone": os.getenv("FIELD_PHONE"),
+    "HighSchoolStage": os.getenv("FIELD_HIGH_SCHOOL_STAGE"),
+    "City": os.getenv("FIELD_CITY"),
+    "NationalID": os.getenv("FIELD_NATIONAL_ID"),
+    "InterestedFields": os.getenv("FIELD_INTERESTED_FIELDS"),
+    "Introduction": os.getenv("FIELD_INTRODUCTION"),
 }
 
 high_school_stage_mapping = {
-    "QSPOLTPXkApB": "高一",
-    "zgexoXDSh4L9": "高二",
-    "SfNAXlu1qTyp": "高三",
-    "bBzRtCawZbxR": "其他",
+    os.getenv("HIGH_SCHOOL_STAGE_1"): "高一",
+    os.getenv("HIGH_SCHOOL_STAGE_2"): "高二",
+    os.getenv("HIGH_SCHOOL_STAGE_3"): "高三",
+    os.getenv("HIGH_SCHOOL_STAGE_4"): "其他",
 }
 
 interested_fields_mapping = {
-    "rxcqgScwZt6V": "策劃部",
-    "nwZZ9T4hqm1D": "設計部",
-    "i7yliEmglWWi": "行政部",
-    "IDmmAQC3X8F3": "公關組",
-    "ic9NIPSy7bSh": "活動企劃組",
-    "lqGiREKp1i0y": "美術組",
-    "SL2ZkegwrKoz": "資訊組",
-    "qGzTbHgzUIvl": "影音組",
-    "NbOhzLWQToSO": "行政組",
-    "Q6lFRKR7QxR8": "財務組",
-    "ltGHHif19TKf": "其他",
+    os.getenv("INTERESTED_FIELD_1"): "策劃部",
+    os.getenv("INTERESTED_FIELD_2"): "設計部",
+    os.getenv("INTERESTED_FIELD_3"): "行政部",
+    os.getenv("INTERESTED_FIELD_4"): "公關組",
+    os.getenv("INTERESTED_FIELD_5"): "活動企劃組",
+    os.getenv("INTERESTED_FIELD_6"): "美術組",
+    os.getenv("INTERESTED_FIELD_7"): "資訊組",
+    os.getenv("INTERESTED_FIELD_8"): "影音組",
+    os.getenv("INTERESTED_FIELD_9"): "行政組",
+    os.getenv("INTERESTED_FIELD_10"): "財務組",
+    os.getenv("INTERESTED_FIELD_11"): "其他",
 }
 
 # Stage two
 field_mapping_two = {
-    "Nickname": "JBFg5bcpbBFX",
-    "OfficialEmail": "BhIZEM4DEKIv",
-    "SchoolName": "GirzXOm97pqz",
-    "EmergencyContactName": "aOycU3YWHsnb",
-    "EmergencyContactPhone": "K3XwYXb9QKLh",
-    "EmergencyContactRelationship": "nUeuGr9JXoeA",
-    "EmergencyContactName2": "test",
-    "EmergencyContactPhone2": "test",
-    "EmergencyContactRelationship2": "test",
-    "StudentIDFront": "IEx5shdcXeud",
-    "StudentIDBack": "QMmN5JoVFw9v",
-    "IDCardFront": "1D6dprnfcU72",
-    "IDCardBack": "QtDXmmGPVwcr",
+    "Nickname": os.getenv("FIELD_TWO_NICKNAME"),
+    "OfficialEmail": os.getenv("FIELD_TWO_OFFICIAL_EMAIL"),
+    "SchoolName": os.getenv("FIELD_TWO_SCHOOL_NAME"),
+    "EmergencyContactName": os.getenv("FIELD_TWO_EMERGENCY_CONTACT_NAME"),
+    "EmergencyContactPhone": os.getenv("FIELD_TWO_EMERGENCY_CONTACT_PHONE"),
+    "EmergencyContactRelationship": os.getenv(
+        "FIELD_TWO_EMERGENCY_CONTACT_RELATIONSHIP"
+    ),
+    "EmergencyContactName2": os.getenv("FIELD_TWO_EMERGENCY_CONTACT_NAME2"),
+    "EmergencyContactPhone2": os.getenv("FIELD_TWO_EMERGENCY_CONTACT_PHONE2"),
+    "EmergencyContactRelationship2": os.getenv(
+        "FIELD_TWO_EMERGENCY_CONTACT_RELATIONSHIP2"
+    ),
+    "StudentIDFront": os.getenv("FIELD_TWO_STUDENT_ID_FRONT"),
+    "StudentIDBack": os.getenv("FIELD_TWO_STUDENT_ID_BACK"),
+    "IDCardFront": os.getenv("FIELD_TWO_ID_CARD_FRONT"),
+    "IDCardBack": os.getenv("FIELD_TWO_ID_CARD_BACK"),
 }
 
-hidden_value_secret = "hUm24WLc"
+hidden_value_secret = os.getenv("HIDDEN_VALUE_SECRET")
 
 
 @application_bp.route("/first_part_application", methods=["POST"])
@@ -120,8 +122,6 @@ def first_part():
 
         user_uuid = str(uuid.uuid4())
 
-        secret = generate_jwt_token(user_uuid)
-
         form_response = {
             "uuid": user_uuid,
             "real_name": name,
@@ -147,11 +147,6 @@ def first_part():
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
 
-        # Generate redirect url
-
-        accept_url = f"{os.getenv("NEXT_FORM_URL")}?secret={secret}"
-        print(accept_url)
-
         # Saves to database
 
         response = requests.post(
@@ -160,12 +155,14 @@ def first_part():
             json=form_response,
         )
 
-        if response.status_code != 200:
+        if response.status_code != 201:
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
         # Sends to discord
 
-        future = asyncio.run_coroutine_threadsafe(send_initial_embed(form_response), bot.loop)
+        future = asyncio.run_coroutine_threadsafe(
+            send_initial_embed(form_response), bot.loop
+        )
         future.result()
 
         return jsonify({"status": "ok"}), 200
