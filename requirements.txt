@@ -1,4 +1,4 @@
-flask[ansy]
+flask[async]
 flask_mailman
 python-dotenv
 Requests
