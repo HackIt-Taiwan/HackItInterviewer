@@ -132,7 +132,7 @@ def first_part():
                 }  # we'll overwrite this later as well
             ],
             "current_group": interested_fields[0],
-            "permission_level": 0,
+            "permission_level": 10,
         }
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
