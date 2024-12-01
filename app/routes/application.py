@@ -29,7 +29,7 @@ high_school_stage_mapping = {
     os.getenv("HIGH_SCHOOL_STAGE_1"): "高一",
     os.getenv("HIGH_SCHOOL_STAGE_2"): "高二",
     os.getenv("HIGH_SCHOOL_STAGE_3"): "高三",
-    os.getenv("HIGH_SCHOOL_STAGE_4"): "其他",
+    os.getenv("HIGH_SCHOOL_STAGE_4"): "高中以上",
 }
 
 interested_fields_mapping = {
