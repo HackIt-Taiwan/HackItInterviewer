@@ -11,4 +11,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 3000
 
-CMD ["uwsgi", "--http", "0.0.0.0:3000", "--master", "-p", "4", "-w", "run:app"]
+CMD ["uwsgi", "--http", "0.0.0.0:3000", "--master", "--enable-threads", "-p", "4", "-w", "run:app"]

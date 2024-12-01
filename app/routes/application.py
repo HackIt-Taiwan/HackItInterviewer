@@ -66,7 +66,7 @@ hidden_value_secret = os.getenv("HIDDEN_VALUE_SECRET")
 
 
 @application_bp.route("/first_part_application", methods=["POST"])
-def first_part():
+async def first_part():
     try:
         print(request.json)
     
@@ -153,8 +153,10 @@ def first_part():
 
         # Sends to discord
 
-    
-        bot.loop.create_task(send_initial_embed(form_response))
+        future = asyncio.run_coroutine_threadsafe(
+            send_initial_embed(form_response), bot.loop
+        )
+        future.result()
 
         return jsonify({"status": "ok"}), 200
     except Exception as e:
