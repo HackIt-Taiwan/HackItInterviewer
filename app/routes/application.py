@@ -151,9 +151,8 @@ def first_part():
 
         # Sends to discord
 
-        future = asyncio.run_coroutine_threadsafe(
-            send_initial_embed(form_response), bot.loop
-        )
+    
+        future = asyncio.run(send_initial_embed(form_response))
         future.result()
 
         return jsonify({"status": "ok"}), 200
