@@ -109,7 +109,7 @@ def first_part():
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {national_id}, {interested_fields[0]}, {introduction}"
+            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {interested_fields[0]}, {introduction}"
         )
 
         user_uuid = str(uuid.uuid4())
@@ -123,7 +123,6 @@ def first_part():
             + phone_number[4:],  # database required phone number without prefix
             "high_school_stage": high_school_stage,
             "city": city,
-            "national_id": national_id,
             "introduction": introduction,
             "emergency_contact": [
                 {
@@ -134,7 +133,6 @@ def first_part():
             ],
             "current_group": interested_fields[0],
             "permission_level": 0,
-            "created_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
         }
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
@@ -148,6 +146,7 @@ def first_part():
         )
 
         if response.status_code != 201:
+            print(response.text)
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
         # Sends to discord
@@ -281,6 +280,7 @@ def second_part():
         )
 
         if response.status_code != 200:
+            print(response.text)
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
         return jsonify({"status": "ok"})
