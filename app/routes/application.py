@@ -4,12 +4,12 @@ import uuid
 import asyncio
 import requests
 
-from datetime import datetime
 from flask import Blueprint, jsonify, request
 from app.discord.application_process.helpers import send_initial_embed, get_bot
 
 from app.utils.jwt import parse_token
 from app.utils.image import image_url_to_base64
+from app.utils.db import get_staff
 
 application_bp = Blueprint("application", __name__)
 bot = get_bot()
@@ -69,12 +69,10 @@ hidden_value_secret = os.getenv("HIDDEN_VALUE_SECRET")
 async def first_part():
     try:
         print(request.json)
-    
+
         form_data = request.json.get("answers", [])
 
-        name = email = phone_number = high_school_stage = city = national_id = (
-            introduction
-        ) = None
+        name = email = phone_number = high_school_stage = city = introduction = None
         interested_fields = []
 
         # Parse form data
@@ -170,7 +168,7 @@ def second_part():
         form_data = request.json.get("answers", [])
         hidden_values = request.json.get("hiddenFields", [])
 
-        nickname = official_email = school = emergency_contact_name = (
+        nickname = official_email = school = national_id = emergency_contact_name = (
             emergency_contact_phone
         ) = emergency_contact_relationship = emergency_contact_name2 = (
             emergency_contact_phone2
@@ -236,7 +234,7 @@ def second_part():
         if not token:
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
-        is_valid, uuid = parse_token(token)
+        is_valid, uuid = parse_token(token, os.getenv("JWT_SECRET_KEY"))
 
         if not is_valid or uuid == "":
             return jsonify({"status": "error", "message": "Bad request"}), 400
@@ -289,6 +287,28 @@ def second_part():
     except Exception as e:
         print(e)
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@application_bp.route("/applicant_data/<jwt>", methods=["GET"])
+def applicant_data(jwt):
+    try:
+        is_valid, uuid = parse_token(jwt, os.getenv("JWT_SECRET_KEY2"))
+
+        if not is_valid or uuid == "":
+            return jsonify({"status": "error", "message": "Forbidden"}), 403
+
+        payload = {"uuid": uuid}
+        is_valid, applicant = get_staff(payload)
+
+        if not is_valid:
+            return jsonify({"status": "error", "message": "Internal server error"}), 500
+
+        applicant = applicant.json().get("data")[0]
+
+        return applicant
+    except Exception as e:
+        print(e)
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
 
 @application_bp.route("/testing", methods=["POST"])

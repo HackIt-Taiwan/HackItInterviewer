@@ -20,11 +20,11 @@ application_process_setup(bot)
 async def on_ready():
     from app.discord.application_process.views import (
         AcceptOrCancelView,
-        # InterviewResultView,
+        InterviewResultView,
     )
 
     bot.add_view(AcceptOrCancelView())
-    # bot.add_view(InterviewResultView())
+    bot.add_view(InterviewResultView())
 
 
 def get_bot():
