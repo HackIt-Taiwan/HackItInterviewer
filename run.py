@@ -5,7 +5,7 @@ monkey.patch_all()  # This allows Gevent to monkey-patch standard libraries for 
 
 import gevent
 import os
-from application.discord.bot_module import bot
+from app.discord.bot_module import bot
 from app import create_app
 
 app = create_app()
