@@ -11,4 +11,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 3000
 
-CMD ["gunicorn", "-k", "gevent", "main:app"]
+CMD ["gunicorn", "-k", "gevent", "run:app"]
