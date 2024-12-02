@@ -25,6 +25,7 @@ async def on_ready():
 
     bot.add_view(AcceptOrCancelView())
     bot.add_view(InterviewResultView())
+    print(f"Logged in as {bot.user}")
 
 
 def get_bot():

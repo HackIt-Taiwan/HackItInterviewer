@@ -3,6 +3,7 @@ import os
 import uuid
 import asyncio
 import requests
+import concurrent.futures
 
 from flask import Blueprint, jsonify, request
 from app.discord.application_process.helpers import send_initial_embed, get_bot
@@ -154,7 +155,22 @@ async def first_part():
         future = asyncio.run_coroutine_threadsafe(
             send_initial_embed(form_response), bot.loop
         )
-        future.result()
+        try:
+            # Add a reasonable timeout to prevent indefinite blocking
+            future.result(timeout=10)  # 10 seconds timeout
+        except concurrent.futures.TimeoutError:
+            print("Discord embed sending timed out")
+            return jsonify(
+                {"status": "error", "message": "Discord embed sending timed out"}
+            ), 500
+        except Exception as e:
+            print(f"Error sending Discord embed: {e}")
+            return jsonify(
+                {
+                    "status": "error",
+                    "message": f"Failed to send Discord embed: {str(e)}",
+                }
+            ), 500
 
         return jsonify({"status": "ok"}), 200
     except Exception as e:
