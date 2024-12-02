@@ -75,7 +75,7 @@ class AcceptOrCancelView(FormResponseView):
             # Send embed
             await send_stage_embed(applicant, interaction.user)
         except TypeError:
-            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內")
+            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內", ephemeral=True)
 
     @discord.ui.button(
         label="取消",
@@ -124,7 +124,7 @@ class AcceptOrCancelView(FormResponseView):
             modal = FailureReasonModal(applicant, action="NOT_ACCEPTED")
             await interaction.response.send_modal(modal)
         except TypeError:
-            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內")
+            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內", ephemeral=True)
 
 
 class InterviewResultView(FormResponseView):
@@ -198,7 +198,7 @@ class InterviewResultView(FormResponseView):
                 action="INTERVIEW_PASSED",
             )
         except TypeError:
-            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內")
+            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內", ephemeral=True)
 
     @discord.ui.button(
         label="面試失敗",
@@ -246,7 +246,7 @@ class InterviewResultView(FormResponseView):
             modal = FailureReasonModal(applicant, action="INTERVIEW_FAILED")
             await interaction.response.send_modal(modal)
         except TypeError:
-            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內")
+            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內", ephemeral=True)
 
     @discord.ui.button(
         label="取消",
@@ -259,7 +259,7 @@ class InterviewResultView(FormResponseView):
             if button.custom_id != "interview_result_view_cancel":
                 return
 
-            # Get applicant info
+            # Get applicant info, yes I wrote this 5 times because of circular import problem.
             message = interaction.message
             if not message.embeds:
                 await interaction.response.send_message("未知錯誤", ephemeral=True)
@@ -295,4 +295,4 @@ class InterviewResultView(FormResponseView):
             modal = FailureReasonModal(applicant, action="INTERVIEW_CANCELLED")
             await interaction.response.send_modal(modal)
         except TypeError:
-            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內")
+            await interaction.response.send_message("錯誤，交互者或申請者不再資料庫內", ephemeral=True)

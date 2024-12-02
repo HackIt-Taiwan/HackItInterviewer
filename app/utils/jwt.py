@@ -4,7 +4,11 @@ import jwt
 from datetime import datetime, timedelta
 
 
-def generate_jwt_token(uuid):
+def generate_form_token(uuid):
+    """
+    Generates jwt token for verifying it is the applicant who's
+    filling the second part form.
+    """
     encoded_jwt = jwt.encode(
         {
             "sub": uuid,
@@ -15,6 +19,23 @@ def generate_jwt_token(uuid):
     )
 
     return encoded_jwt
+
+
+def generate_data_token(uuid):
+    """
+    This is for preventing unauthorized person reading applicant's data
+    In the discord server.
+    """
+    encoded_jwt = jwt.encode(
+        {
+            "sub": uuid, # Maybe a 1 month exp?
+        },
+        os.getenv("JWT_SECRET_KEY2"),
+        algorithm="HS256",
+    )
+
+    return encoded_jwt
+
 
 
 def parse_token(token, secret):
@@ -34,7 +55,7 @@ def parse_token(token, secret):
 
 def generate_next_url(uuid):
     """Generate redirect url"""
-    secret = generate_jwt_token(uuid)
+    secret = generate_form_token(uuid)
     accept_url = f"{os.getenv("NEXT_FORM_URL")}?secret={secret}"
 
     return accept_url

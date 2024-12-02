@@ -6,6 +6,7 @@ import discord
 
 from app.utils.db import get_staff
 from app.utils.mail_sender import send_email
+from app.utils.jwt import generate_data_token
 
 APPLY_FORM_CHANNEL_ID = int(os.getenv("APPLY_FORM_CHANNEL_ID"))
 APPLY_LOG_CHANNEL_ID = int(os.getenv("APPLY_LOG_CHANNEL_ID"))
@@ -106,6 +107,14 @@ async def send_initial_embed(form_response):
                 name=fields_info[field], value=truncate(str(value)), inline=False
             )
 
+    # Add detailed data about applicant
+    jwt = generate_data_token(form_response.get("uuid"))
+    embed.add_field(
+        name="申請者資料",
+        value=f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}",
+        inline=False,
+    )
+
     # Create view with buttons
     from .views import AcceptOrCancelView
 
@@ -173,6 +182,14 @@ async def send_stage_embed(applicant, user):
             embed.add_field(
                 name=fields_info[field], value=truncate(str(value)), inline=False
             )
+
+    # Add detailed data about applicant
+    jwt = generate_data_token(applicant.get("uuid"))
+    embed.add_field(
+        name="申請者資料",
+        value=f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}",
+        inline=False,
+    )
 
     # Create view with buttons
     from .views import InterviewResultView

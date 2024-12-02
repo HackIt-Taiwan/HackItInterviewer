@@ -3,7 +3,6 @@ import os
 import uuid
 import asyncio
 import requests
-import concurrent.futures
 
 from flask import Blueprint, jsonify, request
 from app.discord.application_process.helpers import send_initial_embed, get_bot
@@ -66,11 +65,10 @@ field_mapping_two = {
 hidden_value_secret = os.getenv("HIDDEN_VALUE_SECRET")
 
 
-@application_bp.route("/first_part_application", methods=["POST"])
+# @application_bp.route("/first_part_application", methods=["POST"])
+@application_bp.route("/first_part_application", methods=["GET"])
 async def first_part():
     try:
-        print(request.json)
-
         form_data = request.json.get("answers", [])
 
         name = email = phone_number = high_school_stage = city = introduction = None
@@ -137,6 +135,7 @@ async def first_part():
         }
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
+        print(os.getenv("AUTH_TOKEN"))
 
         # Saves to database
 
@@ -150,27 +149,12 @@ async def first_part():
             print(response.text)
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
-        # Sends to discord
+        # Sends to discord, this sometimes don't want to work.
 
         future = asyncio.run_coroutine_threadsafe(
             send_initial_embed(form_response), bot.loop
         )
-        try:
-            # Add a reasonable timeout to prevent indefinite blocking
-            future.result(timeout=10)  # 10 seconds timeout
-        except concurrent.futures.TimeoutError:
-            print("Discord embed sending timed out")
-            return jsonify(
-                {"status": "error", "message": "Discord embed sending timed out"}
-            ), 500
-        except Exception as e:
-            print(f"Error sending Discord embed: {e}")
-            return jsonify(
-                {
-                    "status": "error",
-                    "message": f"Failed to send Discord embed: {str(e)}",
-                }
-            ), 500
+        future.result()
 
         return jsonify({"status": "ok"}), 200
     except Exception as e:
