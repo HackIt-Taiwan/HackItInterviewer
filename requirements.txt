@@ -4,5 +4,5 @@ python-dotenv
 Requests
 discord.py
 PyJWT
-gunicore
+gunicorn
 gevent
