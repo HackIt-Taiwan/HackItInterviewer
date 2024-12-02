@@ -7,14 +7,14 @@ import os
 app = create_app()
 
 
-def run_discord_bot():
-    bot.run(os.getenv('DISCORD_TOKEN'))
+def run_api():
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", 80))
+    app.run(debug=app.config["DEBUG"], host=host, port=port)
 
 
 if __name__ == "__main__":
-    bot_thread = threading.Thread(target=run_discord_bot)
-    bot_thread.start()
+    web_thread = threading.Thread(target=run_api)
+    web_thread.start()
 
-    host = os.getenv('HOST', '0.0.0.0')
-    port = int(os.getenv('PORT', 80))
-    app.run(debug=app.config['DEBUG'], host=host, port=port)
+    bot.run(os.getenv("DISCORD_TOKEN"))
