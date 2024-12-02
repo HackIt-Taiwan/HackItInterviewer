@@ -17,15 +17,15 @@ def generate_jwt_token(uuid):
     return encoded_jwt
 
 
-def parse_token(token):
+def parse_token(token, secret):
     """
     Tries to decode a jwt token
     if success returns: True, uuid to next form
     else returns False
     """
     try:
-        payload = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
-        return True, payload["sub"]
+        payload = jwt.decode(token, secret, algorithms=["HS256"])
+        return True, payload["sub"] # This returns the sub value, change if needed.
     except jwt.ExpiredSignatureError:
         return False, ""
     except jwt.InvalidTokenError:
