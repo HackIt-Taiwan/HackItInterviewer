@@ -5,6 +5,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from app.discord.application_process import setup as application_process_setup
+from app.discord.customs import setup as customs_setup
+from app.discord.customs.views import CustomsView
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -14,6 +16,7 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 load_dotenv()
 
 application_process_setup(bot)
+customs_setup(bot)
 
 
 @bot.event
@@ -25,6 +28,7 @@ async def on_ready():
 
     bot.add_view(AcceptOrCancelView())
     bot.add_view(InterviewResultView())
+    bot.add_view(CustomsView())
     print(f"Logged in as {bot.user}")
 
 
