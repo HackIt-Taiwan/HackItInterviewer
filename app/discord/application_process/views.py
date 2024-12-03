@@ -374,6 +374,104 @@ class InterviewResultView(FormResponseView):
             )
 
     @discord.ui.button(
+        label="轉移組別",
+        style=discord.ButtonStyle.danger,
+        custom_id="change_group",
+    )
+    async def change_group(self, interaction: discord.Interaction, button: Button):
+        try:
+            """Handle group changing button"""
+            if button.custom_id != "change_group":
+                return
+
+            # Get applicant info
+            message = interaction.message
+            if not message.embeds:
+                await interaction.response.send_message("未知錯誤", ephemeral=True)
+                return
+            embed = message.embeds[0]
+
+            uuid = None
+            for field in embed.fields:
+                if field.name == "申請識別碼":
+                    uuid = field.value
+                    break
+
+            payload = {"uuid": uuid}
+            is_valid, applicant = get_staff(payload)
+            if not is_valid:
+                await interaction.response.send_message("未知錯誤", ephemeral=True)
+                return
+
+            applicant = applicant.json().get("data")[0]
+
+            # Identity verification
+            discord_user_id = str(interaction.user.id)
+            payload = {"discord_id": discord_user_id}
+
+            is_valid, staff = get_staff(payload)
+            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
+                await interaction.response.send_message(
+                    "你無權執行此操作。", ephemeral=True
+                )
+                return
+
+            await interaction.response.send_message("test")
+        except TypeError:
+            await interaction.response.send_message(
+                "錯誤，交互者或申請者不再資料庫內", ephemeral=True
+            )
+
+    @discord.ui.button(
+        label="更換受理人",
+        style=discord.ButtonStyle.danger,
+        custom_id="change_assignee",
+    )
+    async def change_assignee(self, interaction: discord.Interaction, button: Button):
+        try:
+            """Handle assignee chagning button (so you can blame others)"""
+            if button.custom_id != "change_assignee":
+                return
+
+            # Get applicant info
+            message = interaction.message
+            if not message.embeds:
+                await interaction.response.send_message("未知錯誤", ephemeral=True)
+                return
+            embed = message.embeds[0]
+
+            uuid = None
+            for field in embed.fields:
+                if field.name == "申請識別碼":
+                    uuid = field.value
+                    break
+
+            payload = {"uuid": uuid}
+            is_valid, applicant = get_staff(payload)
+            if not is_valid:
+                await interaction.response.send_message("未知錯誤", ephemeral=True)
+                return
+
+            applicant = applicant.json().get("data")[0]
+
+            # Identity verification
+            discord_user_id = str(interaction.user.id)
+            payload = {"discord_id": discord_user_id}
+
+            is_valid, staff = get_staff(payload)
+            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
+                await interaction.response.send_message(
+                    "你無權執行此操作。", ephemeral=True
+                )
+                return
+
+            await interaction.response.send_message("test")
+        except TypeError:
+            await interaction.response.send_message(
+                "錯誤，交互者或申請者不再資料庫內", ephemeral=True
+            )
+
+    @discord.ui.button(
         label="取消",
         style=discord.ButtonStyle.danger,
         custom_id="interview_result_view_cancel",
