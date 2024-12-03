@@ -10,6 +10,39 @@ from app.utils.mail_sender import send_email
 from app.utils.jwt import generate_next_url
 
 
+class FindMyView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="查找負責案件", style=discord.ButtonStyle.primary, custom_id="find_my_button")
+    async def find_my_button(self, interaction: discord.Interaction, button: Button):
+        """Handle the button interaction to trigger the find-my logic."""
+        if button.custom_id != "find_my_button":
+            return
+
+        await interaction.response.defer()
+        discord_user_id = str(interaction.user.id)
+        payload = {"discord_id": discord_user_id}
+        is_valid, staff = get_staff(payload)
+        if not is_valid or (staff.json().get("data") == None) or staff.json().get("data")[0].get("permission_level") < 2:
+            await interaction.followup.send(
+                "你無權執行此操作。", ephemeral=True
+            )
+            return
+
+        discord_user_id = str(interaction.user.id)
+        payload = {"discord_id": discord_user_id}
+        is_valid, staff = get_staff(payload)
+        if not is_valid or (staff.json().get("data") == None) or staff.json().get("data")[0].get("permission_level") < 2:
+            await interaction.followup.send(
+                "你無權執行此操作。", ephemeral=True
+            )
+            return
+
+        
+        await interaction.followup.send("test", ephemeral=True)
+
+
 class FormResponseView(View):
     """Base View that handles form_response retrieval."""
 
