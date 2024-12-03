@@ -41,7 +41,7 @@ class FailureReasonModal(Modal):
 
             # Send email
             send_email(
-                subject="Counterspell / 招募結果通知",
+                subject="HackIt / 招募結果通知",
                 recipient=self.form_response.get("email"),
                 template="emails/notification_fail.html",
                 name=self.form_response.get("real_name"),

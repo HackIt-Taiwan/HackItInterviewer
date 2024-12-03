@@ -123,7 +123,7 @@ async def send_initial_embed(form_response):
     message = await channel.send(embed=embed, view=view)
 
     send_email(
-        subject="Counterspell / 已收到您的工作人員報名表！",
+        subject="HackIt / 已收到您的工作人員報名表！",
         recipient=form_response.get("email"),
         template="emails/notification_email.html",
         name=form_response.get("real_name"),
