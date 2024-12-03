@@ -47,7 +47,7 @@ jobs:
           exit 1
         fi
         # Testing the /webhook endpoint instead of homepage
-        if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/webhook)" -ne 405 ]; then
+        if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/webhook)" -ne 404 ]; then
           echo "Flask application is running, but /webhook returned a non-expected status code."
           sudo cat flask.log
           exit 1

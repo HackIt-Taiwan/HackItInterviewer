@@ -290,7 +290,7 @@ class InterviewResultView(FormResponseView):
             next_url = generate_next_url(applicant.get("uuid"))
 
             send_email(
-                subject="Counterspell / 招募結果通知",
+                subject="HackIt / 招募結果通知",
                 recipient=applicant.get("email"),
                 template="emails/notification_pass.html",
                 name=applicant.get("real_name"),

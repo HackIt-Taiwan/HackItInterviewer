@@ -63,7 +63,7 @@ def get_bot():
 #         await send_initial_embed(form_response)
 #
 #         send_email(
-#             subject="Counterspell / 已收到您的工作人員報名表！",
+#             subject="HackIt / 已收到您的工作人員報名表！",
 #             recipient=row['電子郵件~'],
 #             template='emails/notification_email.html',
 #             name=row['你的名字?'],
