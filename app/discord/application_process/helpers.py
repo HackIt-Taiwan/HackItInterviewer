@@ -4,7 +4,7 @@ import time
 
 import discord
 
-from app.utils.db import get_staff
+from app.utils.db import get_staff, update_staff
 from app.utils.mail_sender import send_email
 from app.utils.jwt import generate_data_token
 
@@ -120,7 +120,7 @@ async def send_initial_embed(form_response):
 
     view = AcceptOrCancelView()
 
-    await channel.send(embed=embed, view=view)
+    message = await channel.send(embed=embed, view=view)
 
     send_email(
         subject="Counterspell / 已收到您的工作人員報名表！",
@@ -129,6 +129,12 @@ async def send_initial_embed(form_response):
         name=form_response.get("real_name"),
         uuid=form_response.get("uuid"),
     )
+
+    # Update applicant's assignee
+    payload = {
+        "apply_message": f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}",
+    }
+    update_staff(form_response.get("uuid"), payload)
 
 
 async def send_stage_embed(applicant, user):
@@ -139,7 +145,8 @@ async def send_stage_embed(applicant, user):
         print(f"Channel with ID {APPLY_FORM_CHANNEL_ID} not found.")
         return
 
-    is_valid, staff = get_staff(user.id)
+    payload = {"discord_id": str(user.id)}
+    is_valid, staff = get_staff(payload)
     if not is_valid:
         print(f"Staff with ID {user.id} not found.")
         await channel.send("錯誤，找不到負責人。")
@@ -195,7 +202,7 @@ async def send_stage_embed(applicant, user):
     from .views import InterviewResultView
 
     view = InterviewResultView()
-    await channel.send(embed=embed, view=view)
+    message = await channel.send(embed=embed, view=view)
 
     # Send log message
     await send_log_message(
@@ -203,6 +210,13 @@ async def send_stage_embed(applicant, user):
         discord_user,
         action="ACCEPTED",
     )
+
+    # Update applicant's assignee
+    payload = {
+        "team_leader": str(user.id),
+        "apply_message": f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}",
+    }
+    update_staff(applicant.get("uuid"), payload)
 
 
 async def send_log_message(

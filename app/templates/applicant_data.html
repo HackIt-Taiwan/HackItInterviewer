@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>申請者資料</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #121212;
+        color: #e0e0e0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      }
+      h1 {
+        text-align: center;
+        color: #76c7c0;
+      }
+      .card {
+        display: table;
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .field {
+        display: table-row;
+      }
+      .field > strong,
+      .field > span {
+        display: table-cell;
+        padding: 10px 15px;
+        border: 1px solid #333;
+      }
+      .field > strong {
+        font-weight: bold;
+        background-color: #252525;
+        color: #76c7c0;
+        text-align: left;
+      }
+      .field > span {
+        text-align: left;
+        color: #e0e0e0;
+      }
+      .field {
+        background-color: #2a2a2a;
+        transition: filter 0.3s ease;
+      }
+      .field:hover {
+        filter: brightness(150%);
+      }
+      .emergency-contacts {
+        display: table-cell;
+        padding: 10px 15px;
+        border: 1px solid #333;
+        background-color: #252525;
+      }
+      .emergency-contacts ul {
+        padding: 0;
+        margin: 0;
+        list-style-type: none;
+      }
+      .emergency-contacts li {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 10px;
+        margin-bottom: 5px;
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 4px;
+      }
+      .emergency-contacts li:hover {
+        background-color: #2a2a2a;
+      }
+      .emergency-contacts strong {
+        color: #76c7c0;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>申請者資料</h1>
+      <div class="card">
+        <div class="field">
+          <strong>UUID:</strong> <span>{{ staff.uuid }}</span>
+        </div>
+        <div class="field">
+          <strong>Real Name:</strong> <span>{{ staff.real_name }}</span>
+        </div>
+        {% if staff.nickname %}
+        <div class="field">
+          <strong>Nickname:</strong> <span>{{ staff.nickname }}</span>
+        </div>
+        {% endif %}
+        <div class="field">
+          <strong>Email:</strong> <span>{{ staff.email }}</span>
+        </div>
+        <div class="field">
+          <strong>Official Email:</strong>
+          <span>{{ staff.official_email }}</span>
+        </div>
+        <div class="field">
+          <strong>Phone Number:</strong> <span>{{ staff.phone_number }}</span>
+        </div>
+        <div class="field">
+          <strong>High School Stage:</strong>
+          <span>{{ staff.high_school_stage }}</span>
+        </div>
+        <div class="field">
+          <strong>City:</strong> <span>{{ staff.city }}</span>
+        </div>
+        {% if staff.school %}
+        <div class="field">
+          <strong>School:</strong> <span>{{ staff.school }}</span>
+        </div>
+        {% endif %} {% if staff.national_id %}
+        <div class="field">
+          <strong>National ID:</strong>
+          <span>{{ staff.national_id }}</span>
+        </div>
+        {% endif %} {% if staff.discord_id %}
+        <div class="field">
+          <strong>Discord ID:</strong>
+          <span>{{ staff.discord_id }}</span>
+        </div>
+        {% endif %} {% if staff.introduction %}
+        <div class="field">
+          <strong>Introduction:</strong>
+          <span>{{ staff.introduction }}</span>
+        </div>
+        {% endif %}
+        <div class="field">
+          <strong>Current Group:</strong> <span>{{ staff.current_group }}</span>
+        </div>
+        <div class="field">
+          <strong>Permission Level:</strong>
+          <span>{{ staff.permission_level }}</span>
+        </div>
+        {% if staff.team_leader %}
+        <div class="field">
+          <strong>Team Leader:</strong>
+          <span>{{ staff.team_leader }}</span>
+        </div>
+        {% endif %} {% if staff.apply_message %}
+        <div class="field">
+          <strong>Apply Message:</strong>
+          <span>{{ staff.apply_message }}</span>
+        </div>
+        {% endif %}
+        <div class="field">
+          <strong>Created At:</strong> <span>{{ staff.created_at }}</span>
+        </div>
+        {% if staff.emergency_contact %}
+        <div class="field">
+          <strong>Emergency Contacts:</strong>
+          <div class="emergency-contacts">
+            <ul>
+              {% for contact in staff.emergency_contact %}
+              <li>
+                <strong>{{ contact.name }}</strong>
+                <span>{{ contact.relationship }} ({{ contact.phone }})</span>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

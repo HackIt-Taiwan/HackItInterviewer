@@ -4,7 +4,7 @@ import uuid
 import asyncio
 import requests
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 from app.discord.application_process.helpers import send_initial_embed, get_bot
 
 from app.utils.jwt import parse_token
@@ -33,11 +33,14 @@ high_school_stage_mapping = {
 }
 
 interested_fields_mapping = {
-    os.getenv("INTERESTED_FIELD_1"): "行政部",
-    os.getenv("INTERESTED_FIELD_2"): "公共事務部",
-    os.getenv("INTERESTED_FIELD_3"): "策劃部",
-    os.getenv("INTERESTED_FIELD_4"): "媒體影像部",
+    os.getenv("INTERESTED_FIELD_1"): "企劃組",
+    os.getenv("INTERESTED_FIELD_2"): "進度管理組",
+    os.getenv("INTERESTED_FIELD_3"): "視覺影像組",
+    os.getenv("INTERESTED_FIELD_4"): "平面設計組",
     os.getenv("INTERESTED_FIELD_5"): "資訊科技部",
+    os.getenv("INTERESTED_FIELD_6"): "公關組",
+    os.getenv("INTERESTED_FIELD_7"): "社群管理組",
+    os.getenv("INTERESTED_FIELD_8"): "行政部",
 }
 
 # Stage two
@@ -65,8 +68,7 @@ field_mapping_two = {
 hidden_value_secret = os.getenv("HIDDEN_VALUE_SECRET")
 
 
-# @application_bp.route("/first_part_application", methods=["POST"])
-@application_bp.route("/first_part_application", methods=["GET"])
+@application_bp.route("/first_part_application", methods=["POST"])
 async def first_part():
     try:
         form_data = request.json.get("answers", [])
@@ -128,14 +130,14 @@ async def first_part():
                     "name": "np",
                     "phone": "1234567890",
                     "relationship": "close",
-                }  # we'll overwrite this later as well
+                }  # we'll overwrite this later
             ],
             "current_group": interested_fields[0],
             "permission_level": 10,
+            "team_leader": "0",  # we'll overwrite this later as well
         }
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
-        print(os.getenv("AUTH_TOKEN"))
 
         # Saves to database
 
@@ -305,7 +307,7 @@ def applicant_data(jwt):
 
         applicant = applicant.json().get("data")[0]
 
-        return applicant
+        return render_template("applicant_data.html", staff=applicant)
     except Exception as e:
         print(e)
         return jsonify({"status": "error", "message": "Internal server error"}), 500
