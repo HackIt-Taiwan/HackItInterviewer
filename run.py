@@ -13,10 +13,9 @@ def run_discord_bot():
 
 # Bad idea, should've used quart or something much more elegant.
 if __name__ == "__main__":
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        # Run the bot only in the reloader process
-        bot_thread = threading.Thread(target=run_discord_bot)
-        bot_thread.start()
+    # Run the bot only in the reloader process
+    bot_thread = threading.Thread(target=run_discord_bot)
+    bot_thread.start()
 
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 80))
