@@ -11,8 +11,16 @@ from app.utils.jwt import generate_data_token
 if os.getenv("APPLY_FORM_CHANNEL_ID") or os.getenv("APPLY_LOG_CHANNEL_ID") is None:
     print("APPLY_FORM_CHANNEL_ID or APPLY_LOG_CHANNEL_ID is not set.")
 
-APPLY_FORM_CHANNEL_ID = int(os.getenv("APPLY_FORM_CHANNEL_ID")) if os.getenv("APPLY_FORM_CHANNEL_ID") else None
-APPLY_LOG_CHANNEL_ID = int(os.getenv("APPLY_LOG_CHANNEL_ID")) if os.getenv("APPLY_LOG_CHANNEL_ID") else None
+APPLY_FORM_CHANNEL_ID = (
+    int(os.getenv("APPLY_FORM_CHANNEL_ID"))
+    if os.getenv("APPLY_FORM_CHANNEL_ID")
+    else None
+)
+APPLY_LOG_CHANNEL_ID = (
+    int(os.getenv("APPLY_LOG_CHANNEL_ID"))
+    if os.getenv("APPLY_LOG_CHANNEL_ID")
+    else None
+)
 
 
 def truncate(value, max_length=1024):
@@ -41,6 +49,7 @@ def get_embed_color(interview_status):
         "INTERVIEW_FAILED": 0xE74C3C,  # Red
         "INTERVIEW_CANCELLED": 0xE74C3C,  # Red
         "INTERVIEW_PASSED": 0x2ECC71,  # Green
+        "CHANGED_ASSIGNEE": 0x0E86D4,  # Blue
     }
     return status_colors.get(interview_status, 0x95A5A6)  # Default gray
 
@@ -48,16 +57,17 @@ def get_embed_color(interview_status):
 def get_embed_title(action):
     """Returns the title for embed based on action"""
     titles = {
-        "NOT_ACCEPTED": "申請已拒絕",  # Red
-        "ACCEPTED": "申請已接受",  # Green
-        "INTERVIEW_FAILED": "面試未通過",  # Red
-        "INTERVIEW_CANCELLED": "面試取消",  # Red
-        "INTERVIEW_PASSED": "面試已通過/已接受",  # Green
+        "NOT_ACCEPTED": "申請已拒絕",
+        "ACCEPTED": "申請已接受",
+        "INTERVIEW_FAILED": "面試未通過",
+        "INTERVIEW_CANCELLED": "面試取消",
+        "INTERVIEW_PASSED": "面試已通過/已接受",
+        "CHANGED_ASSIGNEE": "更換了受理人",
     }
     return titles.get(action, "申請流程")
 
 
-async def send_initial_embed(form_response):
+async def send_initial_embed(form_response, interested_fields):
     """Send the initial embed to the apply form channel."""
     bot = get_bot()
     await bot.wait_until_ready()
@@ -97,8 +107,9 @@ async def send_initial_embed(form_response):
         "real_name",
         "email",
         "phone_number",
-        "interested_fields",
     ]
+
+    interested_fields_string = ", ".join(map(str, interested_fields))
 
     # Add fields to the embed
     for field in embed_fields:
@@ -109,6 +120,12 @@ async def send_initial_embed(form_response):
             embed.add_field(
                 name=fields_info[field], value=truncate(str(value)), inline=False
             )
+
+    embed.add_field(
+        name=fields_info["interested_fields"],
+        value=truncate(interested_fields_string),
+        inline=False,
+    )
 
     # Add detailed data about applicant
     jwt = generate_data_token(form_response.get("uuid"))
@@ -227,6 +244,7 @@ async def send_log_message(
     user,
     action,
     reason: str = None,
+    new_assignee: str = None,
 ):
     """Send a log message to the APPLY_LOG_CHANNEL_ID channel."""
     bot = get_bot()
@@ -269,6 +287,12 @@ async def send_log_message(
 
     if reason:
         embed.add_field(name="理由", value=truncate(str(reason)), inline=False)
+
+    if new_assignee:
+        assignee_user = await bot.fetch_user(new_assignee)
+        embed.add_field(
+            name="新受理人", value=truncate(f"分配給了{assignee_user.mention}")
+        )
 
     # Send the message to the log channel with the button
     await channel.send(embed=embed)

@@ -49,6 +49,7 @@ field_mapping_two = {
     "OfficialEmail": os.getenv("FIELD_TWO_OFFICIAL_EMAIL"),
     "SchoolName": os.getenv("FIELD_TWO_SCHOOL_NAME"),
     "NationalID": os.getenv("FIELD_TWO_NATIONAL_ID"),
+    "InterestedFields2": os.getenv("FIELD_TWO_INTERESTED_FIELD"),
     "EmergencyContactName": os.getenv("FIELD_TWO_EMERGENCY_CONTACT_NAME"),
     "EmergencyContactPhone": os.getenv("FIELD_TWO_EMERGENCY_CONTACT_PHONE"),
     "EmergencyContactRelationship": os.getenv(
@@ -63,6 +64,17 @@ field_mapping_two = {
     "StudentIDBack": os.getenv("FIELD_TWO_STUDENT_ID_BACK"),
     "IDCardFront": os.getenv("FIELD_TWO_ID_CARD_FRONT"),
     "IDCardBack": os.getenv("FIELD_TWO_ID_CARD_BACK"),
+}
+
+two_interested_fields_mapping = {
+    os.getenv("TWO_INTERESTED_FIELD_1"): "企劃組",
+    os.getenv("TWO_INTERESTED_FIELD_2"): "進度管理組",
+    os.getenv("TWO_INTERESTED_FIELD_3"): "視覺影像組",
+    os.getenv("TWO_INTERESTED_FIELD_4"): "平面設計組",
+    os.getenv("TWO_INTERESTED_FIELD_5"): "資訊科技部",
+    os.getenv("TWO_INTERESTED_FIELD_6"): "公關組",
+    os.getenv("TWO_INTERESTED_FIELD_7"): "社群管理組",
+    os.getenv("TWO_INTERESTED_FIELD_8"): "行政部",
 }
 
 hidden_value_secret = os.getenv("HIDDEN_VALUE_SECRET")
@@ -110,7 +122,7 @@ async def first_part():
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {interested_fields[0]}, {introduction}"
+            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {interested_fields}, {introduction}"
         )
 
         user_uuid = str(uuid.uuid4())
@@ -132,7 +144,7 @@ async def first_part():
                     "relationship": "close",
                 }  # we'll overwrite this later
             ],
-            "current_group": interested_fields[0],
+            "current_group": "pending",  # we'll overwrite this later
             "permission_level": 10,
             "team_leader": "0",  # we'll overwrite this later as well
         }
@@ -154,7 +166,7 @@ async def first_part():
         # Sends to discord, this sometimes don't want to work.
 
         future = asyncio.run_coroutine_threadsafe(
-            send_initial_embed(form_response), bot.loop
+            send_initial_embed(form_response, interested_fields), bot.loop
         )
         future.result()
 
@@ -177,6 +189,7 @@ def second_part():
         ) = emergency_contact_relationship2 = studentidfront = studentidback = (
             idcard_front
         ) = idcard_back = token = None
+        interested_fields2 = []
 
         for answer in form_data:
             field_id = answer.get("id")
@@ -190,6 +203,16 @@ def second_part():
                 school = field_value
             elif field_id == field_mapping_two.get("NationalID"):
                 national_id = field_value
+            elif field_id == field_mapping_two.get("InterestedFields2"):
+                interested_field2_ids = (
+                    field_value.get("value", [])
+                    if isinstance(field_value, dict)
+                    else []
+                )
+                interested_fields2 = [
+                    two_interested_fields_mapping.get(field_id, field_id)
+                    for field_id in interested_field2_ids
+                ]
             elif field_id == field_mapping_two.get("EmergencyContactName"):
                 emergency_contact_name = field_value
             elif field_id == field_mapping_two.get("EmergencyContactPhone"):
@@ -228,7 +251,7 @@ def second_part():
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {nickname}, {official_email}, {school}, {national_id}, {emergency_contact_name}, {emergency_contact_name2}"
+            f"Parsed form data: {nickname}, {official_email}, {school}, {national_id}, {emergency_contact_name}, {emergency_contact_name2}, {interested_fields2[0]}"
         )
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
@@ -248,7 +271,8 @@ def second_part():
             "official_email": official_email,
             "school": school,
             "national_id": national_id,
-            "permission_level": 6,
+            "interested_fields2": interested_fields2[0],
+            "permission_level": 3,
             "student_card": [
                 {
                     "front": studentidfront,

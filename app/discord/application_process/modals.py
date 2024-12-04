@@ -4,7 +4,7 @@ from discord.ui import Modal, TextInput
 
 from .helpers import APPLY_LOG_CHANNEL_ID, send_log_message
 from app.utils.mail_sender import send_email
-from app.utils.db import get_staff
+from app.utils.db import get_staff, update_staff
 
 
 class FailureReasonModal(Modal):
@@ -24,17 +24,6 @@ class FailureReasonModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             """Handle modal submission."""
-
-            # Verify identity
-            discord_user_id = str(interaction.user.id)
-            payload = {"discord_id": discord_user_id}
-
-            is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
-                await interaction.response.send_message(
-                    "你無權執行此操作。", ephemeral=True
-                )
-                return
 
             # Update the form_response with the reason
             reason = self.reason_input.value
@@ -61,6 +50,53 @@ class FailureReasonModal(Modal):
             )
 
             # btw, shouldn't we delete staff?
+        except TypeError:
+            await interaction.response.send_message(
+                "錯誤，交互者或申請者不再資料庫內", ephemeral=True
+            )
+
+
+class ChangeAssigneeModal(Modal):
+    """Modal to handle changing assignee's discord id"""
+
+    def __init__(self, form_response):
+        super().__init__(title="請輸入下一個受理人的Discord ID")
+        self.form_response = form_response
+        self.discord_id_input = TextInput(
+            label="Discord ID",
+            style=discord.TextStyle.short,
+            required=True,
+        )
+        self.add_item(self.discord_id_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            """Handle modal submission."""
+
+            # Verify uuid input
+            discord_user_id = str(self.discord_id_input.value)
+            payload = {"discord_id": discord_user_id}
+
+            is_valid, staff = get_staff(payload)
+            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
+                await interaction.response.send_message(
+                    "輸入的Staff無法找到，或者權限不夠。", ephemeral=True
+                )
+                return
+
+            # Change assignee
+            payload = {"team_leader": discord_user_id}
+            update_staff(self.form_response.get("uuid"), payload)
+
+            # Send log message
+            await send_log_message(
+                self.form_response,
+                interaction.user,
+                action="CHANGED_ASSIGNEE",
+                new_assignee=discord_user_id,
+            )
+
+            await interaction.response.send_message("受理者已更換", ephemeral=True)
         except TypeError:
             await interaction.response.send_message(
                 "錯誤，交互者或申請者不再資料庫內", ephemeral=True

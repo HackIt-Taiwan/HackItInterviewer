@@ -4,7 +4,7 @@ import discord
 from discord.ui import Button, View
 
 
-from .modals import FailureReasonModal
+from .modals import FailureReasonModal, ChangeAssigneeModal
 from .helpers import send_stage_embed
 from app.utils.mail_sender import send_email
 from app.utils.jwt import generate_next_url
@@ -33,7 +33,7 @@ class FindMyView(View):
             if (
                 not is_valid
                 or (staff.json().get("data") is None)
-                or staff.json().get("data")[0].get("permission_level") < 2
+                or staff.json().get("data")[0].get("permission_level") == 10
             ):
                 await interaction.followup.send("你無權執行此操作。", ephemeral=True)
                 return
@@ -86,7 +86,7 @@ class FindMyView(View):
             if (
                 not is_valid
                 or (staff.json().get("data") is None)
-                or staff.json().get("data")[0].get("permission_level") < 2
+                or staff.json().get("data")[0].get("permission_level") == 0
             ):
                 await interaction.followup.send("你無權執行此操作。", ephemeral=True)
                 return
@@ -170,7 +170,7 @@ class AcceptOrCancelView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
+            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
                 )
@@ -226,7 +226,7 @@ class AcceptOrCancelView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
+            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
                 )
@@ -281,9 +281,16 @@ class InterviewResultView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
+            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
+                )
+                return
+
+            staff = staff.json().get("data")[0]
+            if staff.get("discord_id") != applicant.get("team_leader"):
+                await interaction.response.send_message(
+                    "你不是此申請者的受理人", ephemeral=True
                 )
                 return
 
@@ -314,10 +321,69 @@ class InterviewResultView(FormResponseView):
 
             # Delete applicant's assignee
             payload = {
-                "team_leader": "",
-                "apply_message": "",
+                "team_leader": None,
+                "apply_message": None,
             }
             update_staff(applicant.get("uuid"), payload)
+        except TypeError:
+            await interaction.response.send_message(
+                "錯誤，交互者或申請者不再資料庫內", ephemeral=True
+            )
+
+    @discord.ui.button(
+        label="更換受理人",
+        style=discord.ButtonStyle.primary,
+        custom_id="change_assignee",
+    )
+    async def change_assignee_button(
+        self, interaction: discord.Interaction, button: Button
+    ):
+        try:
+            """Handle assignee chagning button (so you can blame others)"""
+            if button.custom_id != "change_assignee":
+                return
+
+            # Get applicant info
+            message = interaction.message
+            if not message.embeds:
+                await interaction.response.send_message("未知錯誤", ephemeral=True)
+                return
+            embed = message.embeds[0]
+
+            uuid = None
+            for field in embed.fields:
+                if field.name == "申請識別碼":
+                    uuid = field.value
+                    break
+
+            payload = {"uuid": uuid}
+            is_valid, applicant = get_staff(payload)
+            if not is_valid:
+                await interaction.response.send_message("未知錯誤", ephemeral=True)
+                return
+
+            applicant = applicant.json().get("data")[0]
+
+            # Identity verification
+            discord_user_id = str(interaction.user.id)
+            payload = {"discord_id": discord_user_id}
+
+            is_valid, staff = get_staff(payload)
+            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
+                await interaction.response.send_message(
+                    "你無權執行此操作。", ephemeral=True
+                )
+                return
+
+            staff = staff.json().get("data")[0]
+            if staff.get("discord_id") != applicant.get("team_leader"):
+                await interaction.response.send_message(
+                    "你不是此申請者的受理人", ephemeral=True
+                )
+                return
+
+            modal = ChangeAssigneeModal(applicant)
+            await interaction.response.send_modal(modal)
         except TypeError:
             await interaction.response.send_message(
                 "錯誤，交互者或申請者不再資料庫內", ephemeral=True
@@ -360,112 +426,21 @@ class InterviewResultView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
+            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
+                )
+                return
+
+            staff = staff.json().get("data")[0]
+            if staff.get("discord_id") != applicant.get("team_leader"):
+                await interaction.response.send_message(
+                    "你不是此申請者的受理人", ephemeral=True
                 )
                 return
 
             modal = FailureReasonModal(applicant, action="INTERVIEW_FAILED")
             await interaction.response.send_modal(modal)
-        except TypeError:
-            await interaction.response.send_message(
-                "錯誤，交互者或申請者不再資料庫內", ephemeral=True
-            )
-
-    @discord.ui.button(
-        label="轉移組別",
-        style=discord.ButtonStyle.danger,
-        custom_id="change_group",
-    )
-    async def change_group(self, interaction: discord.Interaction, button: Button):
-        try:
-            """Handle group changing button"""
-            if button.custom_id != "change_group":
-                return
-
-            # Get applicant info
-            message = interaction.message
-            if not message.embeds:
-                await interaction.response.send_message("未知錯誤", ephemeral=True)
-                return
-            embed = message.embeds[0]
-
-            uuid = None
-            for field in embed.fields:
-                if field.name == "申請識別碼":
-                    uuid = field.value
-                    break
-
-            payload = {"uuid": uuid}
-            is_valid, applicant = get_staff(payload)
-            if not is_valid:
-                await interaction.response.send_message("未知錯誤", ephemeral=True)
-                return
-
-            applicant = applicant.json().get("data")[0]
-
-            # Identity verification
-            discord_user_id = str(interaction.user.id)
-            payload = {"discord_id": discord_user_id}
-
-            is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
-                await interaction.response.send_message(
-                    "你無權執行此操作。", ephemeral=True
-                )
-                return
-
-            await interaction.response.send_message("test")
-        except TypeError:
-            await interaction.response.send_message(
-                "錯誤，交互者或申請者不再資料庫內", ephemeral=True
-            )
-
-    @discord.ui.button(
-        label="更換受理人",
-        style=discord.ButtonStyle.danger,
-        custom_id="change_assignee",
-    )
-    async def change_assignee(self, interaction: discord.Interaction, button: Button):
-        try:
-            """Handle assignee chagning button (so you can blame others)"""
-            if button.custom_id != "change_assignee":
-                return
-
-            # Get applicant info
-            message = interaction.message
-            if not message.embeds:
-                await interaction.response.send_message("未知錯誤", ephemeral=True)
-                return
-            embed = message.embeds[0]
-
-            uuid = None
-            for field in embed.fields:
-                if field.name == "申請識別碼":
-                    uuid = field.value
-                    break
-
-            payload = {"uuid": uuid}
-            is_valid, applicant = get_staff(payload)
-            if not is_valid:
-                await interaction.response.send_message("未知錯誤", ephemeral=True)
-                return
-
-            applicant = applicant.json().get("data")[0]
-
-            # Identity verification
-            discord_user_id = str(interaction.user.id)
-            payload = {"discord_id": discord_user_id}
-
-            is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
-                await interaction.response.send_message(
-                    "你無權執行此操作。", ephemeral=True
-                )
-                return
-
-            await interaction.response.send_message("test")
         except TypeError:
             await interaction.response.send_message(
                 "錯誤，交互者或申請者不再資料庫內", ephemeral=True
@@ -508,9 +483,16 @@ class InterviewResultView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") < 2:
+            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
+                )
+                return
+
+            staff = staff.json().get("data")[0]
+            if staff.get("discord_id") != applicant.get("team_leader"):
+                await interaction.response.send_message(
+                    "你不是此申請者的受理人", ephemeral=True
                 )
                 return
 

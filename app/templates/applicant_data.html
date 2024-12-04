@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>申請者資料</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
         font-family: Arial, sans-serif;
         margin: 0;
@@ -30,33 +33,39 @@
         border-collapse: collapse;
       }
       .field {
-        display: table-row;
-      }
-      .field > strong,
-      .field > span {
-        display: table-cell;
-        padding: 10px 15px;
-        border: 1px solid #333;
-      }
-      .field > strong {
-        font-weight: bold;
-        background-color: #252525;
-        color: #76c7c0;
-        text-align: left;
-      }
-      .field > span {
-        text-align: left;
-        color: #e0e0e0;
-      }
-      .field {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
         background-color: #2a2a2a;
         transition: filter 0.3s ease;
       }
       .field:hover {
         filter: brightness(150%);
       }
+      .field > strong {
+        font-weight: bold;
+        background-color: #252525;
+        color: #76c7c0;
+        text-align: left;
+        padding: 10px 15px;
+        border: 1px solid #333;
+        flex: 0 0 30%;
+        max-width: 30%;
+      }
+      .field > span {
+        text-align: left;
+        color: #e0e0e0;
+        padding: 10px 15px;
+        border: 1px solid #333;
+        flex: 1;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: pre-wrap;
+        max-width: 70%;
+        overflow: hidden;
+      }
       .emergency-contacts {
-        display: table-cell;
+        width: 100%;
         padding: 10px 15px;
         border: 1px solid #333;
         background-color: #252525;
@@ -65,15 +74,19 @@
         padding: 0;
         margin: 0;
         list-style-type: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
       .emergency-contacts li {
         display: flex;
         justify-content: space-between;
-        padding: 5px 10px;
-        margin-bottom: 5px;
+        align-items: center;
+        padding: 10px 15px;
         background-color: #1e1e1e;
         border: 1px solid #333;
         border-radius: 4px;
+        width: 100%;
       }
       .emergency-contacts li:hover {
         background-color: #2a2a2a;
@@ -81,6 +94,12 @@
       .emergency-contacts strong {
         color: #76c7c0;
         margin-right: 10px;
+        flex-shrink: 0;
+      }
+      .emergency-contacts .contact-details {
+        display: flex;
+        flex-direction: column;
+        text-align: right;
       }
     </style>
   </head>
@@ -165,7 +184,10 @@
               {% for contact in staff.emergency_contact %}
               <li>
                 <strong>{{ contact.name }}</strong>
-                <span>{{ contact.relationship }} ({{ contact.phone }})</span>
+                <div class="contact-details">
+                  <span>{{ contact.relationship }}</span>
+                  <span>{{ contact.phone }}</span>
+                </div>
               </li>
               {% endfor %}
             </ul>
