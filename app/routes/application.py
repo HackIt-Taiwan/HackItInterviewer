@@ -272,7 +272,6 @@ def second_part():
             "school": school,
             "national_id": national_id,
             "interested_fields2": interested_fields2[0],
-            "permission_level": 3,
             "student_card": [
                 {
                     "front": studentidfront,

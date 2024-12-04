@@ -1,12 +1,15 @@
 # app/discord/customs/modals.py
+import os
 import discord
+from flask import jsonify
+import requests
 
 from app.utils.db import get_staff
 
 
 class PassportCheck(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(title="查驗護照", *args, **kwargs)
         self.add_item(discord.ui.TextInput(
             label='姓名',
             placeholder="於申請表單上所填寫的姓名",
@@ -24,11 +27,31 @@ class PassportCheck(discord.ui.Modal):
 
         payload = {"uuid": self.children[1].value}
         is_valid, applicant = get_staff(payload)
-        if not is_valid:
+        if not is_valid or not applicant or not applicant.json().get("data"):
+            await interaction.response.send_message("查驗失敗，您並非有效公民，請與 official@hackit.tw 聯繫。", ephemeral=True)
+            return
+        
+        data = applicant.json().get("data")
+        if not data or data[0].get("real_name") != self.children[0].value:
             await interaction.response.send_message("查驗失敗，您並非有效公民，請與 official@hackit.tw 聯繫。", ephemeral=True)
             return
 
-        # TODO: use applicant match the name, and check are they pass interviewer? last, check do they already have a discord connection?
-        # TODO: if pass, set the role(department,group) to the user and change the nickname to the name
+        form_response = {
+            "discord_id": str(user.id),
+            "permission_level": 3,
+        }
+
+        headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
+
+        response = requests.post(
+            url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/update/{self.children[1].value}",
+            headers=headers,
+            json=form_response,
+        )
+
+        if response.status_code != 200:
+            print(response.text)
+            await interaction.response.send_message("查驗失敗，您並非有效公民，請與 official@hackit.tw 聯繫。", ephemeral=True)
+            return
 
         await interaction.response.send_message("查驗成功，您為合格公民。", ephemeral=True)
