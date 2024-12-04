@@ -8,7 +8,7 @@ from app.utils.db import get_staff, update_staff
 from app.utils.mail_sender import send_email
 from app.utils.jwt import generate_data_token
 
-if os.getenv("APPLY_FORM_CHANNEL_ID") or os.getenv("APPLY_LOG_CHANNEL_ID") is None:
+if os.getenv("APPLY_FORM_CHANNEL_ID") is None or os.getenv("APPLY_LOG_CHANNEL_ID") is None:
     print("APPLY_FORM_CHANNEL_ID or APPLY_LOG_CHANNEL_ID is not set.")
 
 APPLY_FORM_CHANNEL_ID = (
