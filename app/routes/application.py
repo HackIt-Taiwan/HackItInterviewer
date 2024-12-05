@@ -1,5 +1,6 @@
 # app/routes/application.py
 import os
+import sys
 import uuid
 import asyncio
 import requests
@@ -344,7 +345,7 @@ def second_part():
 @application_bp.route("/applicant_data/<jwt>", methods=["GET"])
 def applicant_data(jwt):
     try:
-        print("test")
+        print('This is standard output', file=sys.stdout)
         is_valid, uuid = parse_token(jwt, os.getenv("JWT_SECRET_KEY2"))
 
         if not is_valid or uuid == "":
@@ -368,11 +369,11 @@ def applicant_data(jwt):
 def testing():
     try:
         
-        print("test")
+        print('Moother fucker', file=sys.stdout)
         form_data = request.json.get("hiddenFields", [])
-        print(form_data)
+        print(form_data, file=sys.stdout)
         form_data = request.json.get("answers", [])
-        print(form_data)
+        print(form_data, file=sys.stdout)
         return jsonify({"status": "ok"})
     except Exception as e:
         print(e)
