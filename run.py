@@ -13,6 +13,7 @@ def run_discord_bot():
 
 # Bad idea, should've used quart or something much more elegant.
 if __name__ == "__main__":
+    print("test")
     # if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         # bot_thread = threading.Thread(target=run_discord_bot)
         # bot_thread.start()
