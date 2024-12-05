@@ -11,4 +11,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 3000
 
+ENV PYTHONUNBUFFERED=1
+
+RUN echo "source activate my_env" > ~/.bashrc
+
+ENV PATH /opt/conda/envs/my_env/bin:$PATH
+
 CMD ["python", "run.py"]

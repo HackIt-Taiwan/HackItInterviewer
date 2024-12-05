@@ -346,6 +346,7 @@ def second_part():
 def applicant_data(jwt):
     try:
         print('This is standard output', file=sys.stdout)
+        print('This is standard aaa')
         is_valid, uuid = parse_token(jwt, os.getenv("JWT_SECRET_KEY2"))
 
         if not is_valid or uuid == "":
