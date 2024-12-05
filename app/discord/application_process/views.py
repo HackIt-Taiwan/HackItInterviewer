@@ -1,4 +1,5 @@
 # app/discord/application_process/views.py
+import os
 import time
 import discord
 from discord.ui import Button, View
@@ -304,6 +305,11 @@ class InterviewResultView(FormResponseView):
                 return
 
             next_url = generate_next_url(applicant.get("uuid"))
+            discord_url = (
+                os.getenv("DISCORD_SERVER_LINK")
+                if os.getenv("DISCORD_SERVER_LINK")
+                else None
+            )
 
             send_email(
                 subject="HackIt / 招募結果通知",
@@ -312,6 +318,7 @@ class InterviewResultView(FormResponseView):
                 name=applicant.get("real_name"),
                 uuid=applicant.get("uuid"),
                 next_url=next_url,
+                discord_url=discord_url,
             )
 
             await interaction.response.send_message(
