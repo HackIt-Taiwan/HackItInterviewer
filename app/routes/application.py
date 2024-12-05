@@ -21,7 +21,8 @@ field_mapping = {
     "Phone": os.getenv("FIELD_PHONE"),
     "HighSchoolStage": os.getenv("FIELD_HIGH_SCHOOL_STAGE"),
     "City": os.getenv("FIELD_CITY"),
-    "InterestedFields": os.getenv("FIELD_INTERESTED_FIELDS"),
+    "TopInterestedField": os.getenv("FIELD_TOP_INTERSTED_FIELD"),
+    "OtherInterestedFields": os.getenv("FIELD_OTHER_INTERESTED_FIELDS"),
     "Introduction": os.getenv("FIELD_INTRODUCTION"),
 }
 
@@ -32,15 +33,27 @@ high_school_stage_mapping = {
     os.getenv("HIGH_SCHOOL_STAGE_4"): "高中以上",
 }
 
-interested_fields_mapping = {
-    os.getenv("INTERESTED_FIELD_1"): "企劃組",
-    os.getenv("INTERESTED_FIELD_2"): "進度管理組",
-    os.getenv("INTERESTED_FIELD_3"): "視覺影像組",
-    os.getenv("INTERESTED_FIELD_4"): "平面設計組",
-    os.getenv("INTERESTED_FIELD_5"): "資訊科技部",
-    os.getenv("INTERESTED_FIELD_6"): "公關組",
-    os.getenv("INTERESTED_FIELD_7"): "社群管理組",
-    os.getenv("INTERESTED_FIELD_8"): "行政部",
+top_interested_field_mapping = {
+    os.getenv("TOP_INTERESTED_FIELD_1"): "企劃組",
+    os.getenv("TOP_INTERESTED_FIELD_2"): "進度管理組",
+    os.getenv("TOP_INTERESTED_FIELD_3"): "視覺影像組",
+    os.getenv("TOP_INTERESTED_FIELD_4"): "平面設計組",
+    os.getenv("TOP_INTERESTED_FIELD_5"): "資訊科技部",
+    os.getenv("TOP_INTERESTED_FIELD_6"): "公關組",
+    os.getenv("TOP_INTERESTED_FIELD_7"): "社群管理組",
+    os.getenv("TOP_INTERESTED_FIELD_8"): "行政部",
+}
+
+
+other_interested_fields_mapping = {
+    os.getenv("OTHER_INTERESTED_FIELD_1"): "企劃組",
+    os.getenv("OTHER_INTERESTED_FIELD_2"): "進度管理組",
+    os.getenv("OTHER_INTERESTED_FIELD_3"): "視覺影像組",
+    os.getenv("OTHER_INTERESTED_FIELD_4"): "平面設計組",
+    os.getenv("OTHER_INTERESTED_FIELD_5"): "資訊科技部",
+    os.getenv("OTHER_INTERESTED_FIELD_6"): "公關組",
+    os.getenv("OTHER_INTERESTED_FIELD_7"): "社群管理組",
+    os.getenv("OTHER_INTERESTED_FIELD_8"): "行政部",
 }
 
 # Stage two
@@ -86,7 +99,7 @@ async def first_part():
         form_data = request.json.get("answers", [])
 
         name = email = phone_number = high_school_stage = city = introduction = None
-        interested_fields = []
+        top_interested_field, other_interested_fields = []
 
         # Parse form data
         for answer in form_data:
@@ -107,22 +120,32 @@ async def first_part():
                     )
             elif field_id == field_mapping.get("City"):
                 city = field_value
-            elif field_id == field_mapping.get("InterestedFields"):
-                interested_field_ids = (
+            elif field_id == field_mapping.get("TopInterestedField"):
+                top_interested_field_ids = (
                     field_value.get("value", [])
                     if isinstance(field_value, dict)
                     else []
                 )
-                interested_fields = [
-                    interested_fields_mapping.get(field_id, field_id)
-                    for field_id in interested_field_ids
+                top_interested_field = [
+                    top_interested_field_mapping.get(field_id, field_id)
+                    for field_id in top_interested_field_ids
+                ]
+            elif field_id == field_mapping.get("OtherInterestedFields"):
+                other_interested_field_ids = (
+                    field_value.get("value", [])
+                    if isinstance(field_value, dict)
+                    else []
+                )
+                other_interested_fields = [
+                    other_interested_fields_mapping.get(field_id, field_id)
+                    for field_id in other_interested_field_ids
                 ]
             elif field_id == field_mapping.get("Introduction"):
                 introduction = field_value
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {interested_fields}, {introduction}"
+            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {top_interested_field[0]}, {other_interested_fields}, {introduction}"
         )
 
         user_uuid = str(uuid.uuid4())
@@ -149,9 +172,13 @@ async def first_part():
             "team_leader": "0",  # we'll overwrite this later as well
         }
 
-        headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
+        if top_interested_field[0] in other_interested_fields:
+            other_interested_fields.remove(top_interested_field[0])
+        other_interested_fields.insert(0, top_interested_field[0])
 
         # Saves to database
+
+        headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
 
         response = requests.post(
             url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/create/new",
@@ -166,7 +193,7 @@ async def first_part():
         # Sends to discord, this sometimes don't want to work.
 
         future = asyncio.run_coroutine_threadsafe(
-            send_initial_embed(form_response, interested_fields), bot.loop
+            send_initial_embed(form_response, other_interested_fields), bot.loop
         )
         future.result()
 
