@@ -366,6 +366,8 @@ def applicant_data(jwt):
 @application_bp.route("/testing", methods=["POST"])
 def testing():
     try:
+        
+        print("test")
         form_data = request.json.get("hiddenFields", [])
         print(form_data)
         form_data = request.json.get("answers", [])
