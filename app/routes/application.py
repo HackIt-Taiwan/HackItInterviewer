@@ -344,6 +344,7 @@ def second_part():
 @application_bp.route("/applicant_data/<jwt>", methods=["GET"])
 def applicant_data(jwt):
     try:
+        print("test")
         is_valid, uuid = parse_token(jwt, os.getenv("JWT_SECRET_KEY2"))
 
         if not is_valid or uuid == "":
