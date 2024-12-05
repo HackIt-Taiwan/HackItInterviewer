@@ -8,6 +8,7 @@ app = create_app()
 
 
 def run_discord_bot():
+    print("tes1111111t")
     bot.run(os.getenv("DISCORD_TOKEN"))
 
 
