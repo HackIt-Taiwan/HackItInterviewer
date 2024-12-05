@@ -170,7 +170,10 @@ class AcceptOrCancelView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
+            if (
+                not is_valid
+                or staff.json().get("data")[0].get("permission_level") == 10
+            ):
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
                 )
@@ -226,7 +229,10 @@ class AcceptOrCancelView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
+            if (
+                not is_valid
+                or staff.json().get("data")[0].get("permission_level") == 10
+            ):
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
                 )
@@ -281,7 +287,10 @@ class InterviewResultView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
+            if (
+                not is_valid
+                or staff.json().get("data")[0].get("permission_level") == 10
+            ):
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
                 )
@@ -313,10 +322,17 @@ class InterviewResultView(FormResponseView):
             # Send log message
             from .helpers import send_log_message
 
+            applicant_data = None
+            for field in embed.fields:
+                if field.name == "申請者資料":
+                    applicant_data = field.value
+                    break
+
             await send_log_message(
                 applicant,
                 interaction.user,
                 action="INTERVIEW_PASSED",
+                applicant_data=applicant_data,
             )
 
             # Delete applicant's assignee
@@ -369,7 +385,10 @@ class InterviewResultView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
+            if (
+                not is_valid
+                or staff.json().get("data")[0].get("permission_level") == 10
+            ):
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
                 )
@@ -426,7 +445,10 @@ class InterviewResultView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
+            if (
+                not is_valid
+                or staff.json().get("data")[0].get("permission_level") == 10
+            ):
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
                 )
@@ -483,7 +505,10 @@ class InterviewResultView(FormResponseView):
             payload = {"discord_id": discord_user_id}
 
             is_valid, staff = get_staff(payload)
-            if not is_valid or staff.json().get("data")[0].get("permission_level") == 10:
+            if (
+                not is_valid
+                or staff.json().get("data")[0].get("permission_level") == 10
+            ):
                 await interaction.response.send_message(
                     "你無權執行此操作。", ephemeral=True
                 )
