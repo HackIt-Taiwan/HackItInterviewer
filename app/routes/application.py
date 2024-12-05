@@ -345,8 +345,6 @@ def second_part():
 @application_bp.route("/applicant_data/<jwt>", methods=["GET"])
 def applicant_data(jwt):
     try:
-        print('This is standard output', file=sys.stdout)
-        print('This is standard aaa')
         is_valid, uuid = parse_token(jwt, os.getenv("JWT_SECRET_KEY2"))
 
         if not is_valid or uuid == "":
@@ -370,11 +368,10 @@ def applicant_data(jwt):
 def testing():
     try:
         
-        print('Moother fucker', file=sys.stdout)
         form_data = request.json.get("hiddenFields", [])
-        print(form_data, file=sys.stdout)
+        print(form_data)
         form_data = request.json.get("answers", [])
-        print(form_data, file=sys.stdout)
+        print(form_data)
         return jsonify({"status": "ok"})
     except Exception as e:
         print(e)
