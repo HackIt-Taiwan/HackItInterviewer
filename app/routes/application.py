@@ -98,9 +98,8 @@ hidden_value_secret = os.getenv("HIDDEN_VALUE_SECRET")
 async def first_part():
     try:
         form_data = request.json.get("answers", [])
-        print(request.get_json())
         name = email = phone_number = high_school_stage = city = introduction = None
-        top_interested_field, other_interested_fields = []
+        top_interested_field = other_interested_fields = []
 
         # Parse form data
         for answer in form_data:
