@@ -312,11 +312,6 @@ def second_part():
                     "phone": emergency_contact_phone,
                     "relationship": emergency_contact_relationship,
                 },
-                {
-                    "name": emergency_contact_name2,
-                    "phone": emergency_contact_phone2,
-                    "relationship": emergency_contact_relationship2,
-                },
             ],
         }
 
