@@ -53,5 +53,12 @@ class PassportCheck(discord.ui.Modal):
             print(response.text)
             await interaction.response.send_message("查驗失敗，並非有效的驗證資訊，請與 official@hackit.tw 聯繫。", ephemeral=True)
             return
+        
+        guild = interaction.guild
+        role = discord.utils.get(guild.roles, name=os.getenv("DISCORD_STAFF_ROLE_NAME"))
 
-        await interaction.response.send_message("查驗成功，你現在正式加入這個伺服器了!", ephemeral=True)
+        if role:
+            await user.add_roles(role) 
+            await interaction.response.send_message("查驗成功，你現在正式加入這個伺服器了!", ephemeral=True)
+        else:
+            await interaction.response.send_message("查驗成功，但無法找到指定角色。請聯繫管理員協助。", ephemeral=True)
