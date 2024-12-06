@@ -57,6 +57,10 @@ class FindMyView(View):
                 color=0xFF4500,
             )
             embed.set_footer(text=time.strftime("%Y/%m/%d %H:%M") + " ● HackIt")
+
+            if applicants is None:
+                await interaction.followup.send("目前沒有未受理申請者", ephemeral=True)
+
             description = ""
             for applicant in applicants:
                 link = applicant.get("apply_message")
@@ -112,6 +116,9 @@ class FindMyView(View):
                 color=0xFF4500,
             )
             embed.set_footer(text=time.strftime("%Y/%m/%d %H:%M") + " ● HackIt")
+
+            if applicants is None:
+                await interaction.followup.send("目前沒有未受理申請者", ephemeral=True)
 
             for applicant in applicants:
                 link = applicant.get("apply_message")
