@@ -28,12 +28,12 @@ class PassportCheck(discord.ui.Modal):
         payload = {"uuid": self.children[1].value}
         is_valid, applicant = get_staff(payload)
         if not is_valid or not applicant or not applicant.json().get("data"):
-            await interaction.response.send_message("查驗失敗，您並非有效公民，請與 official@hackit.tw 聯繫。", ephemeral=True)
+            await interaction.response.send_message("查驗失敗，並非有效的驗證資訊，請與 official@hackit.tw 聯繫。", ephemeral=True)
             return
         
         data = applicant.json().get("data")
         if not data or data[0].get("real_name") != self.children[0].value:
-            await interaction.response.send_message("查驗失敗，您並非有效公民，請與 official@hackit.tw 聯繫。", ephemeral=True)
+            await interaction.response.send_message("查驗失敗，並非有效的驗證資訊，請與 official@hackit.tw 聯繫。", ephemeral=True)
             return
 
         form_response = {
@@ -51,7 +51,7 @@ class PassportCheck(discord.ui.Modal):
 
         if response.status_code != 200:
             print(response.text)
-            await interaction.response.send_message("查驗失敗，您並非有效公民，請與 official@hackit.tw 聯繫。", ephemeral=True)
+            await interaction.response.send_message("查驗失敗，並非有效的驗證資訊，請與 official@hackit.tw 聯繫。", ephemeral=True)
             return
 
-        await interaction.response.send_message("查驗成功，您為合格公民。", ephemeral=True)
+        await interaction.response.send_message("查驗成功，你現在正式加入這個伺服器了!", ephemeral=True)

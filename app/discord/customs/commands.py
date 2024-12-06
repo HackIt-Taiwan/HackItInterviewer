@@ -19,8 +19,8 @@ def setup(bot):
 
         today = time.strftime('%Y/%m/%d')
         embed = discord.Embed(
-            title="HackIt | 海關入境",
-            description="為了確保伺服器的安全及省去相關行政操作\n本 Discord 伺服器採用自動化認證系統\n在開始身份驗證之前請先準備好您的姓名及您的團員識別碼，具體說明請查看<notion連結說明>\n點擊下方「查驗護照」後開始身份驗證，完成後您便可自由暢覽整個伺服器",
+            title="HackIt | 工作人員驗證",
+            description="為了確保伺服器的安全及省去相關行政操作\n本 Discord 伺服器採用自動化認證系統\n在開始身份驗證之前請先準備好您的姓名及您的團員識別碼，具體說明請查看<notion連結說明>\n點擊下方「驗證」後開始身份驗證，完成後您便可自由暢覽整個伺服器",
             colour=0x00FF00)
         embed.set_footer(text=today + " ● HackIt")
         await ctx.send(embed=embed, view=CustomsView())
