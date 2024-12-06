@@ -8,7 +8,10 @@ from app.utils.db import get_staff, update_staff
 from app.utils.mail_sender import send_email
 from app.utils.jwt import generate_data_token
 
-if os.getenv("APPLY_FORM_CHANNEL_ID") is None or os.getenv("APPLY_LOG_CHANNEL_ID") is None:
+if (
+    os.getenv("APPLY_FORM_CHANNEL_ID") is None
+    or os.getenv("APPLY_LOG_CHANNEL_ID") is None
+):
     print("APPLY_FORM_CHANNEL_ID or APPLY_LOG_CHANNEL_ID is not set.")
 
 APPLY_FORM_CHANNEL_ID = (
@@ -212,9 +215,10 @@ async def send_stage_embed(applicant, user):
 
     # Add detailed data about applicant
     jwt = generate_data_token(applicant.get("uuid"))
+    applicant_data = f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}"
     embed.add_field(
         name="申請者資料",
-        value=f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}",
+        value=applicant_data,
         inline=False,
     )
 
@@ -229,6 +233,7 @@ async def send_stage_embed(applicant, user):
         applicant,
         discord_user,
         action="ACCEPTED",
+        applicant_data=applicant_data,
     )
 
     # Update applicant's assignee
@@ -243,6 +248,7 @@ async def send_log_message(
     form_response,
     user,
     action,
+    applicant_data: str = None,
     reason: str = None,
     new_assignee: str = None,
 ):
@@ -293,6 +299,9 @@ async def send_log_message(
         embed.add_field(
             name="新受理人", value=truncate(f"分配給了{assignee_user.mention}")
         )
+
+    if applicant_data:
+        embed.add_field(name="申請者資料", value=applicant_data, inline=False)
 
     # Send the message to the log channel with the button
     await channel.send(embed=embed)
