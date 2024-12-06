@@ -298,18 +298,14 @@ def second_part():
             "school": school,
             "national_id": national_id,
             "interested_fields2": interested_fields2[0],
-            "student_card": [
-                {
-                    "front": studentidfront,
-                    "back": studentidback,
-                }
-            ],
-            "id_card": [
-                {
-                    "front": idcard_front,
-                    "back": idcard_back,
-                }
-            ],
+            "student_card": {
+                "front": studentidfront,
+                "back": studentidback,
+            },
+            "id_card": {
+                "front": idcard_front,
+                "back": idcard_back,
+            },
             "emergency_contact": [
                 {
                     "name": emergency_contact_name,

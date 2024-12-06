@@ -233,7 +233,6 @@ async def send_stage_embed(applicant, user):
         applicant,
         discord_user,
         action="ACCEPTED",
-        applicant_data=applicant_data,
     )
 
     # Update applicant's assignee
