@@ -338,6 +338,17 @@ def second_part():
             print(response.text)
             return jsonify({"status": "error", "message": "Bad request"}), 400
 
+        # Sends cloudflare verification email for connecting hackit to main email
+
+        response = requests.post(
+            url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/send/verify/{uuid}",
+            headers=headers,
+        )
+
+        if response.status_code != 200:
+            print(response.text)
+            return jsonify({"status": "error", "message": "Bad request"}), 400
+
         return jsonify({"status": "ok"})
     except Exception as e:
         print(e)
