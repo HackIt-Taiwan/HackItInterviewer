@@ -55,10 +55,11 @@ class PassportCheck(discord.ui.Modal):
             return
         
         guild = interaction.guild
-        role = discord.utils.get(guild.roles, name=os.getenv("DISCORD_STAFF_ROLE_NAME"))
+        role_id = int(os.getenv("DISCORD_STAFF_ROLE_ID"))  # 確保從環境變數獲取的是整數
+        role = discord.utils.get(guild.roles, id=role_id)
 
         if role:
             await user.add_roles(role) 
-            await interaction.response.send_message("查驗成功，你現在正式加入這個伺服器了!", ephemeral=True)
+            await interaction.response.send_message("查驗成功，你現在正式加入HackIt了!", ephemeral=True)
         else:
             await interaction.response.send_message("查驗成功，但無法找到指定角色。請聯繫管理員協助。", ephemeral=True)
