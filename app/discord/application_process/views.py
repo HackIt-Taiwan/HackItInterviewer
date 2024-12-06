@@ -38,7 +38,7 @@ class FindMyView(View):
                 await interaction.followup.send("你無權執行此操作。", ephemeral=True)
                 return
 
-            payload = {"team_leader": discord_user_id}
+            payload = {"team_leader": discord_user_id, "premission_level": 10}
             is_valid, applicants = get_staff(payload)
             if not is_valid:
                 await interaction.response.send_message(
@@ -49,17 +49,20 @@ class FindMyView(View):
                 await interaction.followup.send("你目前沒有受理的申請者よ")
 
             applicants = applicants.json().get("data")
+            
             embed_title = "你受理的申請者:"
             embed = discord.Embed(
                 title=embed_title,
                 color=0xFF4500,
             )
             embed.set_footer(text=time.strftime("%Y/%m/%d %H:%M") + " ● HackIt")
-
+            description = ""
             for applicant in applicants:
                 link = applicant.get("apply_message")
-                embed.add_field(name="連結:", value=link, inline=False)
+                real_name = applicant.get("real_name")
+                description += "**" + real_name+"**:\n" + link + "\n\n"
 
+            embed.description = description
             await interaction.followup.send(embed=embed, ephemeral=True)
         except TypeError:
             await interaction.response.send_message(
@@ -158,11 +161,13 @@ class AcceptOrCancelView(FormResponseView):
                     break
 
             payload = {"uuid": uuid}
+            print(payload)
             is_valid, applicant = get_staff(payload)
             if not is_valid:
                 await interaction.response.send_message("未知錯誤", ephemeral=True)
                 return
 
+            print(applicant.json())
             applicant = applicant.json().get("data")[0]
 
             # Check permission level of the user who pressed it

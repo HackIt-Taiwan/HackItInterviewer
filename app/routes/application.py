@@ -177,7 +177,6 @@ async def first_part():
         other_interested_fields.insert(0, top_interested_field[0])
 
         # Saves to database
-
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
 
         response = requests.post(
@@ -344,7 +343,7 @@ def second_part():
 @application_bp.route("/applicant_data/<jwt>", methods=["GET"])
 def applicant_data(jwt):
     try:
-        is_valid, uuid = parse_token(jwt, os.getenv("JWT_SECRET_KEY2"))
+        is_valid, uuid = parse_token(jwt, os.getenv("JWT_SECRET_KEY"))
 
         if not is_valid or uuid == "":
             return jsonify({"status": "error", "message": "Forbidden"}), 403
@@ -356,7 +355,7 @@ def applicant_data(jwt):
             return jsonify({"status": "error", "message": "Internal server error"}), 500
 
         applicant = applicant.json().get("data")[0]
-
+        print(applicant)
         return render_template("applicant_data.html", staff=applicant)
     except Exception as e:
         print(e)

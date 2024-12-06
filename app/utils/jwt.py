@@ -12,14 +12,13 @@ def generate_form_token(uuid):
     encoded_jwt = jwt.encode(
         {
             "sub": uuid,
-            "exp": datetime.now() + timedelta(minutes=15),
+            "exp": datetime.now() + timedelta(days=30),
         },
         os.getenv("JWT_SECRET_KEY"),
         algorithm="HS256",
     )
 
     return encoded_jwt
-
 
 def generate_data_token(uuid):
     """
@@ -30,10 +29,9 @@ def generate_data_token(uuid):
         {
             "sub": uuid, # Maybe a 1 month exp?
         },
-        os.getenv("JWT_SECRET_KEY2"),
+        os.getenv("JWT_SECRET_KEY"),
         algorithm="HS256",
     )
-
     return encoded_jwt
 
 
