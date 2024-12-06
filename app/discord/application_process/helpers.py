@@ -134,7 +134,7 @@ async def send_initial_embed(form_response, interested_fields):
     # Add detailed data about applicant
     jwt = generate_data_token(form_response.get("uuid"))
     applicant_data = f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}"
-    shorten_url = make_short_link(applicant_data, 0)
+    shorten_url = await make_short_link(applicant_data, 0)
     embed.add_field(
         name="申請者資料",
         value=f"{shorten_url}",
@@ -219,7 +219,7 @@ async def send_stage_embed(applicant, user):
     # Add detailed data about applicant
     jwt = generate_data_token(applicant.get("uuid"))
     applicant_data = f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}"
-    shorten_url = make_short_link(applicant_data, 0)
+    shorten_url = await make_short_link(applicant_data, 0)
     embed.add_field(
         name="申請者資料",
         value=shorten_url,
