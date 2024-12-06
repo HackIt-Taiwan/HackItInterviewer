@@ -207,7 +207,6 @@ def second_part():
     try:
         form_data = request.json.get("answers", [])
         hidden_values = request.json.get("hiddenFields", [])
-        print(request.get_json())
         nickname = official_email = school = national_id = emergency_contact_name = (
             emergency_contact_phone
         ) = emergency_contact_relationship = emergency_contact_name2 = (
@@ -314,7 +313,15 @@ def second_part():
                 },
             ],
         }
-
+        
+        if emergency_contact_name2 is not '' and emergency_contact_phone2 is not '' and emergency_contact_relationship2 is not '':
+            emergency_contact2 = {
+                "name": emergency_contact_name2,
+                "phone": emergency_contact_phone2,
+                "relationship": emergency_contact_relationship2,
+            }
+            form_response['emergency_contact'].append(emergency_contact2)
+        
         response = requests.post(
             url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/update/{uuid}",
             headers=headers,
