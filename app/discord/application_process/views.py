@@ -2,8 +2,8 @@
 import os
 import time
 import discord
-from discord.ui import Button, View
 
+from discord.ui import Button, View
 
 from .modals import FailureReasonModal, ChangeAssigneeModal
 from .helpers import send_stage_embed
@@ -50,7 +50,7 @@ class FindMyView(View):
                 await interaction.followup.send("你目前沒有受理的申請者よ")
 
             applicants = applicants.json().get("data")
-            
+
             embed_title = "你受理的申請者:"
             embed = discord.Embed(
                 title=embed_title,
@@ -61,7 +61,7 @@ class FindMyView(View):
             for applicant in applicants:
                 link = applicant.get("apply_message")
                 real_name = applicant.get("real_name")
-                description += "**" + real_name+"**:\n" + link + "\n\n"
+                description += "**" + real_name + "**:\n" + link + "\n\n"
 
             embed.description = description
             await interaction.followup.send(embed=embed, ephemeral=True)

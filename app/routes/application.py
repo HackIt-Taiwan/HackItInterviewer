@@ -1,6 +1,5 @@
 # app/routes/application.py
 import os
-import sys
 import uuid
 import asyncio
 import requests
@@ -313,15 +312,22 @@ def second_part():
                 },
             ],
         }
-        
-        if emergency_contact_name2 is not '' and emergency_contact_phone2 is not '' and emergency_contact_relationship2 is not '':
-            emergency_contact2 = {
-                "name": emergency_contact_name2,
-                "phone": emergency_contact_phone2,
-                "relationship": emergency_contact_relationship2,
-            }
-            form_response['emergency_contact'].append(emergency_contact2)
-        
+
+        if all(
+            [
+                emergency_contact_name2,
+                emergency_contact_phone2,
+                emergency_contact_relationship2,
+            ]
+        ):
+            form_response["emergency_contact"].append(
+                {
+                    "name": emergency_contact_name2,
+                    "phone": emergency_contact_phone2,
+                    "relationship": emergency_contact_relationship2,
+                }
+            )
+
         response = requests.post(
             url=f"{os.getenv("BACKEND_ENDPOINT")}/staff/update/{uuid}",
             headers=headers,
@@ -363,7 +369,6 @@ def applicant_data(jwt):
 @application_bp.route("/testing", methods=["POST"])
 def testing():
     try:
-        
         form_data = request.json.get("hiddenFields", [])
         print(form_data)
         form_data = request.json.get("answers", [])

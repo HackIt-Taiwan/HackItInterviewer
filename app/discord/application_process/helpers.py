@@ -7,6 +7,7 @@ import discord
 from app.utils.db import get_staff, update_staff
 from app.utils.mail_sender import send_email
 from app.utils.jwt import generate_data_token
+from app.utils.shortlink import make_short_link
 
 if (
     os.getenv("APPLY_FORM_CHANNEL_ID") is None
@@ -132,9 +133,11 @@ async def send_initial_embed(form_response, interested_fields):
 
     # Add detailed data about applicant
     jwt = generate_data_token(form_response.get("uuid"))
+    applicant_data = f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}"
+    shorten_url = make_short_link(applicant_data, 0)
     embed.add_field(
         name="申請者資料",
-        value=f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}",
+        value=f"{shorten_url}",
         inline=False,
     )
 
@@ -216,9 +219,10 @@ async def send_stage_embed(applicant, user):
     # Add detailed data about applicant
     jwt = generate_data_token(applicant.get("uuid"))
     applicant_data = f"{os.getenv("DOMAIN")}/apply/applicant_data/{jwt}"
+    shorten_url = make_short_link(applicant_data, 0)
     embed.add_field(
         name="申請者資料",
-        value=applicant_data,
+        value=shorten_url,
         inline=False,
     )
 
