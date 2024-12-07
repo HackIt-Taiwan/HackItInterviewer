@@ -17,15 +17,15 @@ async def make_short_link(url, expiry_days):
         "Content-Type": "application/json",
     }
     if expiration_timestamp:
-        payload = {"url": url, "expiration": expiration_timestamp}
+        payload = {"long_url": url, "exp": expiration_timestamp}
     else:
-        payload = {"url": url}
+        payload = {"long_url": url}
 
     response = requests.post(
-        os.getenv("SHORTEN_API_URL"), headers=headers, json=payload
+        os.getenv("SHORTEN_API_URL")+"/shorten", headers=headers, json=payload
     )
 
-    if response.status_code != 201:
+    if response.status_code != 200:
         return None
 
-    return "https://go.hackit.tw/" + response.json()["link"]["slug"]
+    return "https://go.hackit.tw/" + response.json()["short_url"]
