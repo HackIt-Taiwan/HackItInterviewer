@@ -28,4 +28,4 @@ async def make_short_link(url, expiry_days):
     if response.status_code != 200:
         return None
 
-    return os.getenv("SHORTEN_API_URL") + "/" + response.json()["short_url"]
+    return f"{os.getenv("SHORTEN_API_URL")}/{response.json()["short_url"]}"
