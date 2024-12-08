@@ -78,13 +78,21 @@ class PassportCheck(discord.ui.Modal):
         real_name = data[0].get("real_name")
         nickname = data[0].get("nickname")
 
+        if nickname and real_name:
+            if len(nickname) + len(real_name) + 3 > 32:
+                nickname = nickname[:32 - len(real_name) - 4] + "…"
+
         try:
             if real_name != nickname:
                 await user.edit(nick=f"{nickname} ({real_name})")
             else:
                 await user.edit(nick=real_name)
+        except discord.Forbidden:
+            print("無法修改暱稱：權限不足。")
+            await interaction.response.send_message("查驗成功，但無法設定暱稱，請聯繫管理員協助。", ephemeral=True)
         except discord.HTTPException as e:
-            await interaction.response.send_message("查驗成功，但無法設定Nickname。請聯繫管理員協助。", ephemeral=True)
+            print(f"設定暱稱時出現 HTTP 錯誤: {e}")
+            await interaction.response.send_message("查驗成功，但無法設定暱稱，請聯繫管理員協助。", ephemeral=True)
 
         guild = interaction.guild
         role_id = int(os.getenv("DISCORD_STAFF_ROLE_ID"))
