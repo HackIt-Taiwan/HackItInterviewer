@@ -51,6 +51,7 @@ class PassportCheck(discord.ui.Modal):
         if not data or data[0].get("real_name") != self.children[0].value:
             await interaction.response.send_message("查驗失敗，並非有效的驗證資訊，請與 official@hackit.tw 聯繫。", ephemeral=True)
             return
+
         current_group = data[0].get("current_group")
         if current_group == "pending":
             await interaction.response.send_message("查驗失敗，請先填寫完你的個人訊息(第二部分表單後在進行驗證)，如有更多問題請與official@hackit.tw 聯繫。", ephemeral=True)
@@ -73,6 +74,17 @@ class PassportCheck(discord.ui.Modal):
             print(response.text)
             await interaction.response.send_message("查驗失敗，並非有效的驗證資訊，請與 official@hackit.tw 聯繫。", ephemeral=True)
             return
+
+        real_name = data[0].get("real_name")
+        nickname = data[0].get("nickname")
+
+        try:
+            if real_name != nickname:
+                await user.edit(nick=f"{nickname} ({real_name})")
+            else:
+                await user.edit(nick=real_name)
+        except discord.HTTPException as e:
+            await interaction.response.send_message("查驗成功，但無法設定Nickname。請聯繫管理員協助。", ephemeral=True)
 
         guild = interaction.guild
         role_id = int(os.getenv("DISCORD_STAFF_ROLE_ID"))
