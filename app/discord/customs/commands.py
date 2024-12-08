@@ -6,7 +6,6 @@ import discord
 
 from app.discord.customs.views import CustomsView
 
-
 def setup(bot):
     """Set up the customs module."""
 
