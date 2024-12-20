@@ -111,37 +111,37 @@
           <strong>UUID:</strong> <span>{{ staff.uuid }}</span>
         </div>
         <div class="field">
-          <strong>Real Name:</strong> <span>{{ staff.real_name }}</span>
+          <strong>真實姓名:</strong> <span>{{ staff.real_name }}</span>
         </div>
         {% if staff.nickname %}
         <div class="field">
-          <strong>Nickname:</strong> <span>{{ staff.nickname }}</span>
+          <strong>綽號:</strong> <span>{{ staff.nickname }}</span>
         </div>
         {% endif %}
         <div class="field">
-          <strong>Email:</strong> <span>{{ staff.email }}</span>
+          <strong>私人Email:</strong> <span>{{ staff.email }}</span>
         </div>
         <div class="field">
-          <strong>Official Email:</strong>
+          <strong>HackIt 官方Email:</strong>
           <span>{{ staff.official_email }}</span>
         </div>
         <div class="field">
-          <strong>Phone Number:</strong> <span>{{ staff.phone_number }}</span>
+          <strong>手機號碼:</strong> <span>{{ staff.phone_number }}</span>
         </div>
         <div class="field">
-          <strong>High School Stage:</strong>
+          <strong>求學階段:</strong>
           <span>{{ staff.high_school_stage }}</span>
         </div>
         <div class="field">
-          <strong>City:</strong> <span>{{ staff.city }}</span>
+          <strong>城市:</strong> <span>{{ staff.city }}</span>
         </div>
         {% if staff.school %}
         <div class="field">
-          <strong>School:</strong> <span>{{ staff.school }}</span>
+          <strong>學校:</strong> <span>{{ staff.school }}</span>
         </div>
         {% endif %} {% if staff.national_id %}
         <div class="field">
-          <strong>National ID:</strong>
+          <strong>身分證:</strong>
           <span>{{ staff.national_id }}</span>
         </div>
         {% endif %} {% if staff.discord_id %}
@@ -151,34 +151,49 @@
         </div>
         {% endif %} {% if staff.introduction %}
         <div class="field">
-          <strong>Introduction:</strong>
+          <strong>自我介紹:</strong>
           <span>{{ staff.introduction }}</span>
+        </div>
+        {% endif %} {% if staff.choicereason %}
+        <div class="field">
+          <strong>組別選擇原因:</strong>
+          <span>{{ staff.choicereason }}</span>
+        </div>
+        {% endif %} {% if staff.relevant_experience %}
+        <div class="field">
+          <strong>相關經驗:</strong>
+          <span>{{ staff.relevant_experience }}</span>
+        </div>
+        {% endif %} {% if staff.signature_url %}
+        <div class="field">
+          <strong>同意簽名:</strong>
+          <span>{{ staff.signature_url }}</span>
         </div>
         {% endif %}
         <div class="field">
-          <strong>Current Group:</strong> <span>{{ staff.current_group }}</span>
+          <strong>目前的組別:</strong> <span>{{ staff.current_group }}</span>
         </div>
         <div class="field">
-          <strong>Permission Level:</strong>
+          <strong>權限等級:</strong>
           <span>{{ staff.permission_level }}</span>
         </div>
         {% if staff.team_leader %}
         <div class="field">
-          <strong>Team Leader:</strong>
+          <strong>申請受理人:</strong>
           <span>{{ staff.team_leader }}</span>
         </div>
         {% endif %} {% if staff.apply_message %}
         <div class="field">
-          <strong>Apply Message:</strong>
+          <strong>Discord申請URL:</strong>
           <span>{{ staff.apply_message }}</span>
         </div>
         {% endif %}
         <div class="field">
-          <strong>Created At:</strong> <span>{{ staff.created_at }}</span>
+          <strong>創建時間:</strong> <span>{{ staff.created_at }}</span>
         </div>
         {% if staff.emergency_contact %}
         <div class="field">
-          <strong>Emergency Contacts:</strong>
+          <strong>緊急聯絡人:</strong>
           <div class="emergency-contacts">
             <ul>
               {% for contact in staff.emergency_contact %}

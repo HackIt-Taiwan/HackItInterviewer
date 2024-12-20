@@ -24,6 +24,9 @@ field_mapping = {
     "TopInterestedField": os.getenv("FIELD_TOP_INTERSTED_FIELD"),
     "OtherInterestedFields": os.getenv("FIELD_OTHER_INTERESTED_FIELDS"),
     "Introduction": os.getenv("FIELD_INTRODUCTION"),
+    "ChoiceReason": os.getenv("FIELD_CHOICEREASON"),
+    "RelatedExperience": os.getenv("FIELD_RELATEDEXPERIENCE"),
+    "SignatureURL": os.getenv("FIELD_SIGNATUREURL"),
 }
 
 high_school_stage_mapping = {
@@ -97,7 +100,7 @@ hidden_value_secret = os.getenv("HIDDEN_VALUE_SECRET")
 async def first_part():
     try:
         form_data = request.json.get("answers", [])
-        name = email = phone_number = high_school_stage = city = introduction = None
+        name = email = phone_number = high_school_stage = city = introduction = choicereason = relevant_experience = signature_url = None
         top_interested_field = other_interested_fields = []
 
         # Parse form data
@@ -141,10 +144,17 @@ async def first_part():
                 ]
             elif field_id == field_mapping.get("Introduction"):
                 introduction = field_value
+            elif field_id == field_mapping.get("ChoiceReason"):
+                choicereason = field_value
+            elif field_id == field_mapping.get("RelatedExperience"):
+                relevant_experience = field_value
+            elif field_id == field_mapping.get("SignatureURL"):
+                signature_url = field_value
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {city}, {top_interested_field[0]}, {other_interested_fields}, {introduction}"
+            f"Parsed form data: {name}, {email}, {phone_number}, {high_school_stage}, {
+                city}, {top_interested_field[0]}, {other_interested_fields}, {introduction}, {relevant_experience}, {choicereason}, {signature_url}"
         )
 
         user_uuid = str(uuid.uuid4())
@@ -155,10 +165,14 @@ async def first_part():
             "email": email,
             "official_email": "placeholder@hackit.tw",  # we'll overwrite this later
             "phone_number": "0"
-            + phone_number[4:],  # database required phone number without prefix
+            # database required phone number without prefix
+            + phone_number[4:],
             "high_school_stage": high_school_stage,
             "city": city,
             "introduction": introduction,
+            "relevant_experience": relevant_experience,
+            "choicereason": choicereason,
+            "signature_url": signature_url,
             "emergency_contact": [
                 {
                     "name": "np",
@@ -191,7 +205,8 @@ async def first_part():
         # Sends to discord, this sometimes don't want to work.
 
         future = asyncio.run_coroutine_threadsafe(
-            send_initial_embed(form_response, other_interested_fields), bot.loop
+            send_initial_embed(
+                form_response, other_interested_fields), bot.loop
         )
         future.result()
 
@@ -275,7 +290,8 @@ def second_part():
 
         print("---------------------------------")
         print(
-            f"Parsed form data: {nickname}, {official_email}, {school}, {national_id}, {emergency_contact_name}, {emergency_contact_name2}, {interested_fields2[0]}"
+            f"Parsed form data: {nickname}, {official_email}, {school}, {national_id}, {
+                emergency_contact_name}, {emergency_contact_name2}, {interested_fields2[0]}"
         )
 
         headers = {"Authorization": f"Bearer {os.getenv('AUTH_TOKEN', '')}"}
