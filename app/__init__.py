@@ -26,6 +26,14 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 
+    print(app.config['MAIL_SERVER'])
+    print(app.config['MAIL_PORT'])
+    print(app.config['MAIL_USE_TLS'])
+    print(app.config['MAIL_USE_SSL'])
+    print(app.config['MAIL_USERNAME'])
+    print(app.config['MAIL_PASSWORD'])
+    print(app.config['MAIL_DEFAULT_SENDER'])
+
     mail.init_app(app)
 
     # Here to load blueprint
