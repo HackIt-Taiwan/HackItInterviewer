@@ -26,28 +26,6 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 
-    print(app.config['MAIL_SERVER'])
-    print(app.config['MAIL_PORT'])
-    print(app.config['MAIL_USE_TLS'])
-    print(app.config['MAIL_USE_SSL'])
-    print(app.config['MAIL_USERNAME'])
-    print(app.config['MAIL_PASSWORD'])
-    print(app.config['MAIL_DEFAULT_SENDER'])
-
-    mail.init_app(app)
-
-    try:
-        msg = EmailMessage(
-            subject="Test Email from Flask App",
-            body="This is a test email sent during app initialization.",
-            from_email=app.config['MAIL_DEFAULT_SENDER'],
-            to=["jebijiw696@owube.com"]  # Sending to the same email for test purposes
-        )
-        msg.send()
-        print("Test email sent successfully!")
-    except Exception as e:
-        print(f"Failed to send test email: {e}")
-        
     # Here to load blueprint
     from app.routes.application import application_bp
     from app.routes.email_preview import email_preview_bp
