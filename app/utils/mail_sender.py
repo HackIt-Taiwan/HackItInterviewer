@@ -13,6 +13,7 @@ def send_email(subject, recipient, template, **kwargs):
         msg = EmailMessage(
             subject=subject,
             body=render_template(template, **kwargs),
+            from_email=app.config["MAIL_DEFAULT_SENDER"],
             to=[recipient]
         )
         msg.content_subtype = 'html'
