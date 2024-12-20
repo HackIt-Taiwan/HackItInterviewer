@@ -4,7 +4,7 @@ import os
 from flask import Flask, render_template
 
 from dotenv import load_dotenv
-from flask_mailman import EmailMessage, Mail
+from flask_mailman import Mail
 
 app = Flask(__name__)
 mail = Mail()
@@ -25,6 +25,8 @@ def create_app():
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+
+    mail.init_app(app)
 
     # Here to load blueprint
     from app.routes.application import application_bp
